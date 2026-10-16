@@ -13,7 +13,7 @@ O que faz:
 
 Uso rapido:
   python realista.py                      -> menu interativo
-  python realista.py foto.jpg             -> processa a foto (upscale 2x, perfil automatico)
+  python realista.py foto.jpg             -> processa a foto (upscale 2x, perfil dia)
   python realista.py foto.jpg -e 3        -> upscale 3x
   python realista.py pasta/ -p noite      -> todas as fotos da pasta, perfil noite
   python realista.py --ajuda              -> todas as opcoes
@@ -384,11 +384,6 @@ def processar(bgr, perfil, escala, pelos_k, rng, log):
 # --------------------------------------------------------------------------------------
 # 5) Interface (linha de comando + menu)
 # --------------------------------------------------------------------------------------
-def escolher_perfil(bgr):
-    cinza = cv2.cvtColor(bgr[::4, ::4], cv2.COLOR_BGR2GRAY)
-    return "noite" if float(cinza.mean()) < 75 else "dia"
-
-
 def limitar_escala(shape, escala, max_mp):
     h, w = shape[:2]
     e = escala
@@ -486,8 +481,8 @@ def menu():
         sys.exit(1)
     e = perguntar("Upscale (1, 2, 3 ou 4) [2]: ", "2")
     escala = int(e) if e.isdigit() and 1 <= int(e) <= 4 else 2
-    p = perguntar("Perfil: auto / dia / noite [auto]: ", "auto").lower()
-    perfil = p if p in ("dia", "noite") else "auto"
+    p = perguntar("Perfil: dia / noite [dia]: ", "dia").lower()
+    perfil = p if p in ("dia", "noite") else "dia"
     return arquivos, escala, perfil
 
 
@@ -497,7 +492,7 @@ def main():
         description="Deixa fotos com aspecto de foto de iPhone recente (so codigo).")
     ap.add_argument("caminhos", nargs="*", help="foto(s) ou pasta(s)")
     ap.add_argument("-e", "--escala", type=int, choices=[1, 2, 3, 4], default=None, help="upscale (padrao 2)")
-    ap.add_argument("-p", "--perfil", choices=["auto", "dia", "noite"], default="auto")
+    ap.add_argument("-p", "--perfil", choices=["dia", "noite"], default="dia")
     ap.add_argument("--pelos", type=float, default=1.0, help="intensidade do realce dos pelos (0 desliga, padrao 1)")
     ap.add_argument("-o", "--saida", default=None, help="pasta de saida (padrao: ao lado da foto)")
     ap.add_argument("--max-mp", type=float, default=16.0,
@@ -540,7 +535,7 @@ def main():
             e = limitar_escala(bgr.shape, escala, args.max_mp)
             if e != escala:
                 print("   ! %dx passaria de %.0f MP; usando %dx (mude com --max-mp)" % (escala, args.max_mp, e))
-            pf = perfil if perfil != "auto" else escolher_perfil(bgr)
+            pf = perfil
             print("   perfil: %s | upscale: %dx | %dx%d -> %dx%d" % (
                 pf, e, bgr.shape[1], bgr.shape[0], bgr.shape[1] * e, bgr.shape[0] * e))
             img, q = processar(bgr, pf, e, max(0.0, args.pelos), rng, log)

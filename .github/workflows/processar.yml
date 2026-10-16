@@ -22,10 +22,10 @@ on:
         required: true
         type: string
       perfil:
-        description: auto, dia ou noite
+        description: dia ou noite
         required: false
         type: string
-        default: auto
+        default: dia
       pelos:
         description: Intensidade do realce dos pelos (0 a 3)
         required: false

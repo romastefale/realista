@@ -34,7 +34,7 @@ Também dá para rodar à mão em **Actions → Processar → Run workflow**, in
 
 - Agendamentos do GitHub atrasam; a foto some do histórico entre 1h e ~1h20. Em repositório público o GitHub desativa workflows agendados após 60 dias sem atividade.
 - PNG não perde qualidade, mas fica bem maior que o JPG (em 2×, uma foto de 12 MP pode passar de 80 MB). O JPG sai com qualidade 93.
-- Perfis disponíveis: `dia` e `noite` (e `auto`, que escolhe um dos dois). Para criar outro, adicione uma entrada em `PERFIS` no `realista.py` e o nome em três lugares: `choices` do argumento `-p` no `realista.py`, a lista em `scripts/pedido.py` e o `<select id="perfil">` do `index.html`.
+- Perfis disponíveis: `dia` e `noite`, escolhidos sempre à mão (não há modo automático). Para criar outro, adicione uma entrada em `PERFIS` no `realista.py` e o nome em três lugares: `choices` do argumento `-p` no `realista.py`, a lista em `scripts/pedido.py` e o `<select id="perfil">` do `index.html`.
 - O upscale é sempre 2× e o limite de megapixels do script foi elevado a 100 MP (`--max-mp 100`), então uma foto de 12 MP sai com 8064×6048. Em teste, isso levou de 20 a 50 s e 3 a 4 GB de memória. O GitHub recusa arquivos acima de 100 MB, então um PNG acima de ~90 MiB é recomprimido sem perda e, se ainda passar, entregue como JPG de qualidade 95 (4:4:4); a página avisa e baixa o arquivo que existir.
 - **Avisos:** se o upscale sair diferente de 2× (foto original acima de ~50 MP) ou se um PNG virar JPG por causa do limite do GitHub, o workflow registra um aviso e a página o mostra no lugar da dica.
 - A API pública do GitHub aceita 60 consultas por hora sem login; a página consulta a cada 10 s e depois a cada 30 s.

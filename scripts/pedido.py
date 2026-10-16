@@ -27,11 +27,11 @@ if evento == "issues":
     opcoes = {}
     for chave, valor in re.findall(r"^\s*(perfil|pelos|formato)\s*=\s*(\S+)\s*$", corpo, re.M):
         opcoes.setdefault(chave, valor)
-    perfil, pelos = opcoes.get("perfil", "auto"), opcoes.get("pelos", "1.0")
+    perfil, pelos = opcoes.get("perfil", "dia"), opcoes.get("pelos", "1.0")
     formato = opcoes.get("formato", "jpg")
 else:
     url, versao = env("URL_MANUAL", ""), env("VERSAO_MANUAL", "")
-    perfil, pelos = env("PERFIL_MANUAL") or "auto", env("PELOS_MANUAL") or "1.0"
+    perfil, pelos = env("PERFIL_MANUAL") or "dia", env("PELOS_MANUAL") or "1.0"
     formato = env("FORMATO_MANUAL") or "jpg"
 
 if not re.fullmatch(r"[A-Za-z0-9-]{6,64}", versao):
@@ -40,8 +40,8 @@ if not url:
     erro("Não achei a foto no pedido. Anexe a imagem na issue ou cole o link dela.")
 if not re.fullmatch(r"https?://\S+", url):
     erro("O link da foto não é válido.")
-if perfil not in ("auto", "dia", "noite"):
-    erro("Perfil inválido.")
+if perfil not in ("dia", "noite"):
+    erro("Perfil inválido (use dia ou noite).")
 if not re.fullmatch(r"[0-3](\.[0-9]+)?", pelos):
     erro("Valor de pelos inválido.")
 if formato not in ("jpg", "png"):
