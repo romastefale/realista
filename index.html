@@ -158,16 +158,17 @@ button{font:inherit;cursor:pointer}
 .motivo[hidden]{display:none}
 
 /* ── Específico do realista ─────────────────────────────────────────────── */
-.opcoes{display:flex;flex-wrap:wrap;justify-content:center;gap:.5em}
-.opcao{display:inline-flex;align-items:center;gap:.4em;padding:.5em .9em;min-height:max(40px,2.5em);border-radius:999px;
-  font-size:.88em;color:var(--bar-text);box-shadow:var(--glass-float)}
-.opcao select{border:0;background:transparent;color:inherit;font:inherit;font-weight:600;padding:0 .2em;outline-offset:3px;-webkit-appearance:none;appearance:none;cursor:pointer}
-.opcao select option{color:#1c1c1e}
-.opcao small{color:var(--bar-sub);font-size:.92em}
 .dica{margin:-.5em 0 0;font-size:.85em;line-height:1.4;color:var(--bar-sub);text-align:center}
-.previa{width:100%;display:none;border-radius:1.1em;overflow:hidden;box-shadow:var(--glass-float)}
+.dica[hidden]{display:none}
+/* Resultado: só um filete fino colado na imagem, sem moldura nem folga. A altura máxima desconta
+   o resto do card (título, barra, botão e espaços, medidos em em) e as margens da tela, para
+   tudo caber sem rolar. */
+:root{--hairline:rgba(0,0,0,.2)}
+@media (prefers-color-scheme:dark){:root{--hairline:rgba(255,255,255,.28)}}
+.previa{display:none;justify-self:center;width:auto;height:auto;max-width:100%;
+  max-height:max(8em,calc(100svh - 17.5em - max(16px,env(safe-area-inset-top)) - max(16px,env(safe-area-inset-bottom))));
+  border:.5px solid var(--hairline);border-radius:.75em}
 .previa.on{display:block}
-.previa img{display:block;width:100%;height:auto;max-height:50vh;object-fit:contain}
 
 </style>
 </head>
@@ -195,19 +196,10 @@ button{font:inherit;cursor:pointer}
     </button>
   </div>
 
-  <div class="opcoes">
-    <label class="opcao frost"><small>Perfil</small>
-      <select id="perfil"><option value="dia" selected>dia</option><option value="noite">noite</option></select></label>
-    <label class="opcao frost"><small>Formato</small>
-      <select id="formato"><option value="jpg" selected>JPG</option><option value="png">PNG</option></select></label>
-    <label class="opcao frost"><small>Pelos</small>
-      <select id="pelos"><option value="0">0</option><option value="0.5">0,5</option><option value="1.0" selected>1</option><option value="1.5">1,5</option><option value="2.0">2</option></select></label>
-  </div>
-
-  <p class="dica" id="dica">Sem link, toque na seta e anexe a foto na página do GitHub que abrir.</p>
+  <p class="dica" id="dica" hidden></p>
   <p class="motivo" id="motivo" role="alert" hidden></p>
 
-  <div class="previa frost" id="previa"><img id="imagem" alt="Resultado"></div>
+  <img class="previa" id="imagem" alt="Resultado">
 
   <div class="downloads">
     <button class="btn frost" type="button" disabled id="baixar">
@@ -231,10 +223,11 @@ const LIMITE_MS = 20 * 60_000; // tempo para anexar a foto, confirmar a issue e 
 const intervalo = (n) => (n < 30 ? 10_000 : 30_000);
 
 const $ = (s) => document.querySelector(s);
-const DICA = "Sem link, toque na seta e anexe a foto na página do GitHub que abrir.";
 const st = { carregando: $("#st-carregando"), pronto: $("#st-pronto"), erro: $("#st-erro") };
 let versao = "";
 let formato = "jpg";
+// Valores iniciais do pedido. Ficam editáveis só na issue (no corpo, uma linha por opção).
+const PADRAO = { perfil: "dia", pelos: "1.0", formato: "jpg" };
 let resultado = null;
 
 function estado(qual, motivo = "") {
@@ -245,7 +238,7 @@ function estado(qual, motivo = "") {
   $("#motivo").hidden = true;
   $("#baixar").disabled = qual !== "pronto";
   $("#rotulo-baixar").textContent = formato.toUpperCase();
-  if (qual !== "pronto") $("#previa").classList.remove("on");
+  if (qual !== "pronto") $("#imagem").classList.remove("on");
 }
 
 async function gh(caminho) {
@@ -315,7 +308,7 @@ async function motivoDaFalha(id) {
 // limite do GitHub, o workflow entrega um JPG de alta qualidade no lugar: tenta os dois.
 async function baixarResultado() {
   const tipos = { png: "image/png", jpg: "image/jpeg" };
-  const tentativas = formato === "png" ? ["png", "jpg"] : ["jpg"];
+  const tentativas = ["jpg", "png"];
   let ultimo = 0;
   for (let i = 0; i < 8; i++) {
     for (const ext of tentativas) {
@@ -323,13 +316,10 @@ async function baixarResultado() {
       if (!r.ok) { ultimo = r.status; continue; }
       const blob = new Blob([await r.arrayBuffer()], { type: tipos[ext] });
       if (resultado) URL.revokeObjectURL(resultado.url);
-      if (ext !== formato) {
-        $("#dica").textContent = "O PNG passou do limite de 100 MB do GitHub, então vem em JPG de alta qualidade.";
-        formato = ext;
-      }
+      formato = ext;
       resultado = { url: URL.createObjectURL(blob), nome: `realista-${versao}.${ext}` };
       $("#imagem").src = resultado.url;
-      $("#previa").classList.add("on");
+      $("#imagem").classList.add("on");
       return;
     }
     await esperar(3000);
@@ -357,16 +347,17 @@ $("#form").addEventListener("submit", (e) => {
     if (!link) return estado("erro", "Esse link não é válido. Use um link que comece com https://.");
   }
   versao = novaVersao();
-  formato = $("#formato").value;
-  $("#dica").textContent = DICA;
+  formato = PADRAO.formato;
+  $("#dica").hidden = true;
   const corpo = [
-    link,
-    `perfil=${$("#perfil").value}`,
-    `pelos=${$("#pelos").value}`,
-    `formato=${formato}`,
+    ...(link ? [link] : []),
+    `perfil=${PADRAO.perfil}`,
+    `pelos=${PADRAO.pelos}`,
+    `formato=${PADRAO.formato}`,
     "",
-    link ? "" : "Anexe a foto aqui (arraste, cole ou toque no clipe) e confirme em Create.",
-  ].filter((l, i) => l !== "" || i > 3).join("\n");
+    "Opções (edite os valores acima se quiser): perfil dia ou noite; pelos de 0 a 3; formato jpg ou png.",
+    ...(link ? [] : ["", "Anexe a foto aqui (arraste, cole ou toque no clipe) e confirme em Create."]),
+  ].join("\n");
   const pedido = new URLSearchParams({ title: `processar ${versao}`, body: corpo });
   // Abre já no clique, senão o navegador bloqueia a nova aba.
   window.open(`https://github.com/${DONO}/${REPO}/issues/new?${pedido}`, "_blank", "noopener");
@@ -375,7 +366,10 @@ $("#form").addEventListener("submit", (e) => {
     .then(async (id) => {
       await baixarResultado();
       const notas = await avisos(id);
-      if (notas.length) $("#dica").textContent = notas.join(" ");
+      if (notas.length) {
+        $("#dica").textContent = notas.join(" ");
+        $("#dica").hidden = false;
+      }
     })
     .then(() => estado("pronto"), (erro) => estado("erro", erro.message));
 });

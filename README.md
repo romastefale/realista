@@ -5,8 +5,11 @@ Página para rodar o `realista.py` (foto com aspecto de iPhone, só código) pel
 ## Como usar
 
 1. Abra **https://romastefale.github.io/realista/**
-2. Ajuste perfil, pelos e formato (JPG ou PNG). O upscale é sempre 2×.
-3. Toque na seta. Abre no GitHub uma issue já preenchida: **anexe a foto** nela (ou, antes, cole na página o link de uma foto que já esteja online e deixe o campo preenchido) e toque em *Create*. Você precisa estar logado como dono do repositório.
+2. Toque na seta. Abre no GitHub uma issue já preenchida. As opções ficam **só no corpo da issue**, uma por linha, e você pode editá-las antes de confirmar:
+   - `perfil=dia` (ou `noite`)
+   - `pelos=1.0` (de 0 a 3)
+   - `formato=jpg` (ou `png`)
+3. **Anexe a foto** na issue (ou, antes, cole na página o link de uma foto que já esteja online) e toque em *Create*. Você precisa estar logado como dono do repositório.
 4. Volte para a página: ela acompanha o processamento (1 a 3 minutos) e mostra o resultado, com botão para baixar.
 
 Também dá para rodar à mão em **Actions → Processar → Run workflow**, informando o link da foto.
