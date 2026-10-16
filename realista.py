@@ -8,7 +8,7 @@ O que faz:
   * tone mapping local (estilo Smart HDR), pretos profundos, pele levemente suavizada
   * deteccao e reforco de pelos faciais (barba, bigode, sobrancelha)
   * nitidez com halo leve, cor, vinheta e aberracao cromatica minimas
-  * perfil "dia": grao residual quase imperceptivel
+  * perfil "dia": grao leve, de sensor (sutil, mais visivel nas sombras)
   * perfil "noite": bloom nas luzes + ruido de sensor (Poisson-Gaussian em mosaico Bayer)
 
 Uso rapido:
@@ -119,7 +119,7 @@ BASE = dict(
     compress=0.95, hl_pull=0.05, detail=0.95, skin_smooth=0.55, bp_frac=0.9, shadow_gamma=1.08,
     sharp=0.28, halo=0.12, sat=1.05, a_shift=0.8, b_shift=0.8, ca=0.0003, vig=0.05, jpeg=93,
     hair_thr=0.035, hair_dark=0.10, hair_light=0.07, hair_micro=0.55,
-    grain=0.003,          # grao residual (perfil dia)
+    grain=0.014,          # grao leve (perfil dia): sigma ~0.6/255 nas sombras, medido numa foto de referencia
     sensor_noise=False,   # ruido Bayer Poisson-Gaussian (perfil noite)
     bloom=0.0, glint=0.0, shot=0.0016, read=0.00008, chroma_blur=2.0, luma_blur=0.55,
 )
