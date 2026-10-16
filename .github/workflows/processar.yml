@@ -101,12 +101,18 @@ jobs:
         id: ajuste
         env:
           FORMATO: ${{ steps.pedido.outputs.formato }}
+          ORIGINAL: ${{ steps.foto.outputs.arquivo }}
         run: |
           # PNG acima de ~90 MiB não cabe no GitHub (100 MB por arquivo): recomprime sem perda
           # e, se ainda passar, entrega JPG de alta qualidade. A página baixa o que existir.
           final=$(python scripts/ajustar.py "trabalho/resultado.$FORMATO")
           echo "arquivo=$final" >> "$GITHUB_OUTPUT"
           echo "ext=${final##*.}" >> "$GITHUB_OUTPUT"
+          # a página lê estes avisos do workflow e mostra para você
+          if [ "${final##*.}" != "$FORMATO" ]; then
+            echo "::warning::Aviso: o PNG passou do limite de 100 MB do GitHub e foi entregue em JPG de alta qualidade, com o mesmo tamanho em pixels."
+          fi
+          python scripts/conferir.py "$ORIGINAL" "$final"
 
       - name: Gravar o resultado na branch tmp
         env:

@@ -277,10 +277,25 @@ async function acompanhar() {
     }
     execucao = await gh(`/actions/runs/${execucao.id}`);
     if (execucao.status !== "completed") continue;
-    if (execucao.conclusion === "success") return;
+    if (execucao.conclusion === "success") return execucao.id;
     throw new Error(await motivoDaFalha(execucao.id));
   }
   throw new Error("Não vi o processamento terminar. Confirmou a issue no GitHub?");
+}
+
+// Avisos do workflow (::warning::): upscale reduzido, PNG entregue como JPG.
+async function avisos(id) {
+  try {
+    const { jobs } = await gh(`/actions/runs/${id}/jobs`);
+    const textos = [];
+    for (const job of jobs) {
+      const notas = await gh(`/check-runs/${job.id}/annotations`);
+      for (const n of notas) if (n.annotation_level === "warning" && /^Aviso:/.test(n.message)) textos.push(n.message);
+    }
+    return textos;
+  } catch {
+    return [];
+  }
 }
 
 // O workflow escreve o motivo como ::error::, que vira anotação do job.
@@ -356,7 +371,13 @@ $("#form").addEventListener("submit", (e) => {
   // Abre já no clique, senão o navegador bloqueia a nova aba.
   window.open(`https://github.com/${DONO}/${REPO}/issues/new?${pedido}`, "_blank", "noopener");
   estado("carregando");
-  acompanhar().then(baixarResultado).then(() => estado("pronto"), (erro) => estado("erro", erro.message));
+  acompanhar()
+    .then(async (id) => {
+      await baixarResultado();
+      const notas = await avisos(id);
+      if (notas.length) $("#dica").textContent = notas.join(" ");
+    })
+    .then(() => estado("pronto"), (erro) => estado("erro", erro.message));
 });
 
 st.erro.addEventListener("click", () => ($("#motivo").hidden = !$("#motivo").hidden));
