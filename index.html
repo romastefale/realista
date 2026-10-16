@@ -158,27 +158,16 @@ button{font:inherit;cursor:pointer}
 .motivo[hidden]{display:none}
 
 /* ── Específico do realista ─────────────────────────────────────────────── */
-.escolher{position:absolute;inset:0 6.2em 0 0;display:flex;align-items:center;gap:.5em;padding:0 0 0 1em;border:0;background:none;
-  color:var(--bar-text);font:inherit;font-size:max(16px,1.0625em);letter-spacing:-.012em;text-align:left;min-width:0}
-.escolher span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.escolher.vazio span{color:var(--bar-sub)}
-.escolher svg{width:1.1em;height:1.1em;flex:0 0 auto;color:var(--bar-sub)}
 .opcoes{display:flex;flex-wrap:wrap;justify-content:center;gap:.5em}
 .opcao{display:inline-flex;align-items:center;gap:.4em;padding:.5em .9em;min-height:max(40px,2.5em);border-radius:999px;
   font-size:.88em;color:var(--bar-text);box-shadow:var(--glass-float)}
 .opcao select{border:0;background:transparent;color:inherit;font:inherit;font-weight:600;padding:0 .2em;outline-offset:3px;-webkit-appearance:none;appearance:none;cursor:pointer}
 .opcao select option{color:#1c1c1e}
 .opcao small{color:var(--bar-sub);font-size:.92em}
-.previa{width:100%;max-height:50vh;display:none;border-radius:1.1em;overflow:hidden;box-shadow:var(--glass-float)}
+.dica{margin:-.5em 0 0;font-size:.85em;line-height:1.4;color:var(--bar-sub);text-align:center}
+.previa{width:100%;display:none;border-radius:1.1em;overflow:hidden;box-shadow:var(--glass-float)}
 .previa.on{display:block}
 .previa img{display:block;width:100%;height:auto;max-height:50vh;object-fit:contain}
-dialog{border:0;border-radius:1.4em;padding:1.2em;max-width:min(28em,92vw);color:var(--text);font-size:15px;box-shadow:var(--glass-float)}
-dialog::backdrop{background:rgba(0,0,0,.35)}
-dialog h2{margin:0 0 .4em;font-size:1.05em}
-dialog p{margin:.3em 0 .8em;color:var(--bar-sub);line-height:1.4}
-dialog input{width:100%;height:2.6em;border-radius:.8em;border:1px solid rgba(128,128,128,.4);background:rgba(255,255,255,.55);padding:0 .8em;font:inherit;font-size:16px;color:#1c1c1e}
-dialog .linha{display:flex;gap:.5em;justify-content:flex-end;margin-top:.9em}
-dialog .btn{min-height:2.5em;padding:.5em 1.1em}
 
 </style>
 </head>
@@ -186,25 +175,22 @@ dialog .btn{min-height:2.5em;padding:.5em 1.1em}
 <main class="card frost">
   <h1><span class="prompt" aria-hidden="true"><span class="chev">❯</span><span class="cursor">_</span></span>realista</h1>
 
-  <input id="arquivo" type="file" accept="image/*,.heic,.heif" hidden>
   <div class="pill-bar frost">
-    <button class="escolher vazio" type="button" id="escolher" aria-label="Escolher foto">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-8 8"/></svg>
-      <span id="nome-arquivo">Escolher foto</span>
-    </button>
-    <span class="status" id="st-carregando" role="status" aria-label="Processando" hidden style="position:absolute;top:.56em;right:5.25em">
-      <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9" /></svg>
-    </span>
-    <span class="status" id="st-pronto" role="status" aria-label="Pronto" hidden style="position:absolute;top:.56em;right:5.25em">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.4 4.4L19 7.3"/></svg>
-    </span>
-    <button class="status" type="button" id="st-erro" aria-label="Falhou. Ver motivo" hidden style="position:absolute;top:.56em;right:5.25em">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.4v.1"/></svg>
-    </button>
-    <button class="colar frost" type="button" id="chave" aria-label="Chave de acesso do GitHub">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 9.2-9.2M16 7l3 3M14 9l2 2"/></svg>
-    </button>
-    <button class="lupa frost" type="button" id="enviar" aria-label="Processar">
+    <form class="page-search" role="search" aria-label="Processar foto" id="form">
+      <input id="link" type="url" inputmode="url" placeholder="Link da foto (opcional)" aria-label="Link da foto, opcional"
+             autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
+      <span class="ps-sep" id="sep" aria-hidden="true" hidden></span>
+      <span class="status" id="st-carregando" role="status" aria-label="Processando" hidden>
+        <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9" /></svg>
+      </span>
+      <span class="status" id="st-pronto" role="status" aria-label="Pronto" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.4 4.4L19 7.3"/></svg>
+      </span>
+      <button class="status" type="button" id="st-erro" aria-label="Falhou. Ver motivo" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.4v.1"/></svg>
+      </button>
+    </form>
+    <button class="lupa frost" type="submit" form="form" id="lupa" aria-label="Processar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m0 0-5 5m5-5 5 5"/></svg>
     </button>
   </div>
@@ -218,6 +204,7 @@ dialog .btn{min-height:2.5em;padding:.5em 1.1em}
       <select id="pelos"><option value="0">0</option><option value="0.5">0,5</option><option value="1.0" selected>1</option><option value="1.5">1,5</option><option value="2.0">2</option></select></label>
   </div>
 
+  <p class="dica" id="dica">Sem link, toque na seta e anexe a foto na página do GitHub que abrir.</p>
   <p class="motivo" id="motivo" role="alert" hidden></p>
 
   <div class="previa frost" id="previa"><img id="imagem" alt="Resultado"></div>
@@ -228,127 +215,77 @@ dialog .btn{min-height:2.5em;padding:.5em 1.1em}
   </div>
 </main>
 
-<dialog id="dlg-chave" class="frost">
-  <form method="dialog" id="form-chave">
-    <h2>Chave de acesso</h2>
-    <p>Cole um token do GitHub restrito a este repositório (Contents e Actions: leitura e escrita). Ele fica só neste navegador.</p>
-    <input id="campo-chave" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…" aria-label="Token">
-    <div class="linha">
-      <button class="btn frost" type="button" id="limpar-chave">Remover</button>
-      <button class="btn frost" type="submit" value="ok">Salvar</button>
-    </div>
-  </form>
-</dialog>
-
 <script type="module">
-// Fluxo: a foto sobe para a branch "tmp" (entrada/<id>.<ext>) pela API do GitHub, o
-// workflow "Processar" roda o realista.py e grava saida/<id>.jpg na mesma branch, e a
-// página baixa o resultado. O workflow "Limpar" esconde tudo com mais de 1h.
-// Para usar outro repositório, troque as duas constantes abaixo.
+// A seta abre no GitHub uma issue já preenchida com o pedido ("processar <versão>", com as
+// opções no corpo). Você anexa a foto (ou já colou o link dela aqui), confirma lá com o seu
+// login, e a issue dispara o workflow "Processar". A página acompanha a execução e baixa o
+// resultado sem chave nenhuma: o repositório é público. Só issues do dono são atendidas.
+// Para usar outro repositório, troque as constantes abaixo.
 const DONO = "romastefale";
 const REPO = "realista";
 const RAMO = "tmp";
 const API = `https://api.github.com/repos/${DONO}/${REPO}`;
-const LIMITE_MS = 15 * 60_000;
-const INTERVALO_MS = 5_000;
-const EXTENSOES = { jpg: "jpg", jpeg: "jpeg", png: "png", webp: "webp", heic: "heic", heif: "heif", bmp: "bmp", tif: "tif", tiff: "tiff" };
+const RESULTADOS = `https://raw.githubusercontent.com/${DONO}/${REPO}/${RAMO}/saida`;
+const LIMITE_MS = 20 * 60_000; // tempo para anexar a foto, confirmar a issue e o job rodar
+// A API pública aceita 60 consultas por hora: 10 s no começo, 30 s depois.
+const intervalo = (n) => (n < 30 ? 10_000 : 30_000);
 
 const $ = (s) => document.querySelector(s);
 const st = { carregando: $("#st-carregando"), pronto: $("#st-pronto"), erro: $("#st-erro") };
-let foto = null;
-let resultado = null;     // { url, nome }
-
-function guardar(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} }
-function ler(k) { try { return localStorage.getItem(k) || ""; } catch { return ""; } }
-const token = () => ler("realista-token");
+let versao = "";
+let resultado = null;
 
 function estado(qual, motivo = "") {
   for (const [k, el] of Object.entries(st)) el.hidden = k !== qual;
-  $("#enviar").disabled = qual === "carregando";
-  $("#escolher").disabled = qual === "carregando";
+  $("#sep").hidden = qual === "vazio";
+  $("#lupa").disabled = qual === "carregando";
   $("#motivo").textContent = motivo;
   $("#motivo").hidden = true;
   $("#baixar").disabled = qual !== "pronto";
-  if (qual !== "pronto") { $("#previa").classList.remove("on"); }
+  if (qual !== "pronto") $("#previa").classList.remove("on");
 }
 
-class Falha extends Error {}
-
-async function gh(caminho, opcoes = {}) {
-  const r = await fetch(`${API}${caminho}`, {
-    ...opcoes,
-    headers: { "X-GitHub-Api-Version": "2022-11-28", Accept: "application/vnd.github+json", Authorization: `Bearer ${token()}`, ...(opcoes.headers || {}) },
-  });
-  if (r.status === 401) throw new Falha("A chave não foi aceita. Toque na chave e cole de novo.");
-  if (r.status === 403 || r.status === 429) throw new Falha("O GitHub limitou as consultas, ou a chave não tem permissão. Tente de novo em alguns minutos.");
-  return r;
+async function gh(caminho) {
+  const r = await fetch(`${API}${caminho}`, { headers: { "X-GitHub-Api-Version": "2022-11-28" } });
+  if (r.status === 403 || r.status === 429) throw new Error("O GitHub limitou as consultas por agora. Tente de novo em alguns minutos.");
+  if (!r.ok) throw new Error(`O GitHub respondeu ${r.status}.`);
+  return r.json();
 }
 
 const esperar = (ms) => new Promise((ok) => setTimeout(ok, ms));
 
-function novoId() {
+// Data e hora locais e um sufixo curto, para dois pedidos no mesmo segundo não colidirem.
+function novaVersao() {
   const d = new Date();
   const p = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}-${Math.random().toString(36).slice(2, 6)}`;
+  const data = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  return `${data}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
-function paraBase64(arquivo) {
-  return new Promise((ok, erro) => {
-    const leitor = new FileReader();
-    leitor.onload = () => ok(String(leitor.result).split(",")[1]);
-    leitor.onerror = () => erro(new Falha("Não consegui ler a foto."));
-    leitor.readAsDataURL(arquivo);
-  });
-}
-
-async function enviarFoto(id, ext) {
-  const r = await gh(`/contents/entrada/${id}.${ext}`, {
-    method: "PUT",
-    body: JSON.stringify({ message: `entrada: ${id}`, content: await paraBase64(foto), branch: RAMO }),
-  });
-  if (r.status === 404 || r.status === 422) {
-    throw new Falha("Não achei a branch tmp. Rode o workflow Limpar uma vez (Actions → Limpar → Run workflow).");
-  }
-  if (!r.ok) throw new Falha(`O GitHub respondeu ${r.status} ao enviar a foto.`);
-}
-
-async function dispararWorkflow(id, ext) {
-  const r = await gh("/actions/workflows/processar.yml/dispatches", {
-    method: "POST",
-    body: JSON.stringify({
-      ref: "main",
-      inputs: { id, ext, escala: $("#escala").value, perfil: $("#perfil").value, pelos: $("#pelos").value },
-    }),
-  });
-  if (r.status !== 204) throw new Falha(`O GitHub respondeu ${r.status} ao iniciar o processamento.`);
-}
-
-async function acompanhar(id) {
+async function acompanhar() {
   const fim = Date.now() + LIMITE_MS;
   let execucao = null;
-  while (Date.now() < fim) {
-    await esperar(INTERVALO_MS);
+  for (let n = 0; Date.now() < fim; n++) {
+    await esperar(intervalo(n));
     if (!execucao) {
-      const r = await gh("/actions/workflows/processar.yml/runs?event=workflow_dispatch&per_page=20");
-      if (!r.ok) throw new Falha(`O GitHub respondeu ${r.status}.`);
-      execucao = (await r.json()).workflow_runs.find((x) => x.name === `processar ${id}`) || null;
+      const { workflow_runs } = await gh("/actions/workflows/processar.yml/runs?per_page=20");
+      execucao = workflow_runs.find((r) => r.name === `processar ${versao}`) || null;
       continue;
     }
-    const r = await gh(`/actions/runs/${execucao.id}`);
-    if (!r.ok) throw new Falha(`O GitHub respondeu ${r.status}.`);
-    execucao = await r.json();
+    execucao = await gh(`/actions/runs/${execucao.id}`);
     if (execucao.status !== "completed") continue;
     if (execucao.conclusion === "success") return;
-    throw new Falha(await motivoDaFalha(execucao.id));
+    throw new Error(await motivoDaFalha(execucao.id));
   }
-  throw new Falha("Não vi o processamento terminar.");
+  throw new Error("Não vi o processamento terminar. Confirmou a issue no GitHub?");
 }
 
+// O workflow escreve o motivo como ::error::, que vira anotação do job.
 async function motivoDaFalha(id) {
   try {
-    const { jobs } = await (await gh(`/actions/runs/${id}/jobs`)).json();
+    const { jobs } = await gh(`/actions/runs/${id}/jobs`);
     for (const job of jobs) {
-      const notas = await (await gh(`/check-runs/${job.id}/annotations`)).json();
+      const notas = await gh(`/check-runs/${job.id}/annotations`);
       const nota = notas.find((n) => n.annotation_level === "failure" && !/exit code/i.test(n.message));
       if (nota) return nota.message;
     }
@@ -356,57 +293,219 @@ async function motivoDaFalha(id) {
   return "O processamento falhou.";
 }
 
-async function baixarResultado(id) {
-  const r = await gh(`/contents/saida/${id}.jpg?ref=${RAMO}`, { headers: { Accept: "application/vnd.github.raw+json" } });
-  if (!r.ok) throw new Falha(`O GitHub respondeu ${r.status} ao baixar o resultado.`);
-  const blob = new Blob([await r.arrayBuffer()], { type: "image/jpeg" });
-  if (resultado) URL.revokeObjectURL(resultado.url);
-  resultado = { url: URL.createObjectURL(blob), nome: `${foto.name.replace(/\.[^.]+$/, "")}_realista.jpg` };
-  $("#imagem").src = resultado.url;
-  $("#previa").classList.add("on");
+// O arquivo pode levar alguns segundos para aparecer depois do push.
+async function baixarResultado() {
+  let ultimo = 0;
+  for (let i = 0; i < 8; i++) {
+    const r = await fetch(`${RESULTADOS}/${versao}.jpg`);
+    if (r.ok) {
+      const blob = new Blob([await r.arrayBuffer()], { type: "image/jpeg" });
+      if (resultado) URL.revokeObjectURL(resultado.url);
+      resultado = { url: URL.createObjectURL(blob), nome: `realista-${versao}.jpg` };
+      $("#imagem").src = resultado.url;
+      $("#previa").classList.add("on");
+      return;
+    }
+    ultimo = r.status;
+    await esperar(3000);
+  }
+  throw new Error(`Não consegui baixar o resultado (o GitHub respondeu ${ultimo}).`);
 }
 
-$("#escolher").addEventListener("click", () => $("#arquivo").click());
-$("#arquivo").addEventListener("change", () => {
-  foto = $("#arquivo").files[0] || null;
-  $("#nome-arquivo").textContent = foto ? foto.name : "Escolher foto";
-  $("#escolher").classList.toggle("vazio", !foto);
-  estado("vazio");
+// Acha o link no texto, mesmo no meio de outro texto.
+function acharLink(texto) {
+  const achado = texto.match(/https?:\/\/[^\s<>"]+/i)?.[0];
+  if (!achado) return null;
+  try {
+    return new URL(achado).href;
+  } catch {
+    return null;
+  }
+}
+
+$("#form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const texto = $("#link").value.trim();
+  let link = "";
+  if (texto) {
+    link = acharLink(texto);
+    if (!link) return estado("erro", "Esse link não é válido. Use um link que comece com https://.");
+  }
+  versao = novaVersao();
+  const corpo = [
+    link,
+    `escala=${$("#escala").value}`,
+    `perfil=${$("#perfil").value}`,
+    `pelos=${$("#pelos").value}`,
+    "",
+    link ? "" : "Anexe a foto aqui (arraste, cole ou toque no clipe) e confirme em Create.",
+  ].filter((l, i) => l !== "" || i > 3).join("\n");
+  const pedido = new URLSearchParams({ title: `processar ${versao}`, body: corpo });
+  // Abre já no clique, senão o navegador bloqueia a nova aba.
+  window.open(`https://github.com/${DONO}/${REPO}/issues/new?${pedido}`, "_blank", "noopener");
+  estado("carregando");
+  acompanhar().then(baixarResultado).then(() => estado("pronto"), (erro) => estado("erro", erro.message));
 });
 
-$("#enviar").addEventListener("click", async () => {
-  if (!foto) return estado("erro", "Escolha uma foto primeiro.");
-  if (!token()) { $("#dlg-chave").showModal(); return; }
-  const ext = EXTENSOES[(foto.name.split(".").pop() || "").toLowerCase()];
-  if (!ext) return estado("erro", "Formato não aceito. Use JPG, PNG, WebP, HEIC, BMP ou TIFF.");
-  const id = novoId();
-  estado("carregando");
-  try {
-    await enviarFoto(id, ext);
-    await dispararWorkflow(id, ext);
-    await acompanhar(id);
-    await baixarResultado(id);
-    estado("pronto");
-    $("#previa").classList.add("on");
-  } catch (e) {
-    estado("erro", e instanceof Falha ? e.message : "Algo falhou. Tente de novo.");
-  }
-});
+st.erro.addEventListener("click", () => ($("#motivo").hidden = !$("#motivo").hidden));
+$("#link").addEventListener("input", () => { if (!st.erro.hidden) estado("vazio"); });
 
 $("#baixar").addEventListener("click", () => {
   if (!resultado) return;
   const a = Object.assign(document.createElement("a"), { href: resultado.url, download: resultado.nome });
   a.click();
+  setTimeout(() => URL.revokeObjectURL(resultado.url), 60_000);
 });
 
-st.erro.addEventListener("click", () => ($("#motivo").hidden = !$("#motivo").hidden));
+// O Safari pode deslocar a viewport visual ao abrir o teclado sem alterar scrollY.
+// A posição do cartão é registrada ANTES do foco por ponteiro; foco por teclado ou
+// tecnologia assistiva usa o próprio evento focus como alternativa.
+const campoLink = $("#link");
+const raiz = document.documentElement;
+const cartao = $(".card");
+const corpo = document.body;
+const DELTA_MINIMA_TECLADO = 100;
+let frameViewport = 0;
+let topoOriginalCartao = 0;
+let margemTopoSegura = 16;
+let scrollBloqueadoX = 0;
+let scrollBloqueadoY = 0;
+let alturaViewportAntesDoTeclado = window.visualViewport?.height ?? window.innerHeight;
+let snapshotPreFocoPronto = false;
 
-$("#chave").addEventListener("click", () => { $("#campo-chave").value = ""; $("#dlg-chave").showModal(); });
-$("#form-chave").addEventListener("submit", () => {
-  const v = $("#campo-chave").value.trim();
-  if (v) guardar("realista-token", v);
+function capturarEstadoAntesDoFoco() {
+  scrollBloqueadoX = window.scrollX;
+  scrollBloqueadoY = window.scrollY;
+  alturaViewportAntesDoTeclado = window.visualViewport?.height ?? window.innerHeight;
+  margemTopoSegura = Math.max(16, Number.parseFloat(getComputedStyle(corpo).paddingTop) || 0);
+  topoOriginalCartao = Math.max(margemTopoSegura, cartao.getBoundingClientRect().top);
+  raiz.style.setProperty("--card-screen-top", `${topoOriginalCartao}px`);
+  snapshotPreFocoPronto = true;
+}
+
+campoLink.addEventListener("pointerdown", () => {
+  if (!raiz.classList.contains("campo-em-edicao") && document.activeElement !== campoLink) {
+    capturarEstadoAntesDoFoco();
+  }
 });
-$("#limpar-chave").addEventListener("click", () => { guardar("realista-token", null); $("#dlg-chave").close(); });
+
+function impedirRolagemDuranteEdicao(evento) {
+  if (!raiz.classList.contains("campo-em-edicao")) return;
+  // O campo segue recebendo gestos de edição e seleção; a página externa não rola.
+  if (evento.target instanceof Element && evento.target.closest("#link")) return;
+  evento.preventDefault();
+}
+
+document.addEventListener("touchmove", impedirRolagemDuranteEdicao, { passive: false });
+
+function deslocamentoViewportVisual(eixo, viewport) {
+  const alturaAtual = viewport?.height ?? window.innerHeight;
+  const tecladoReduziuViewport = alturaViewportAntesDoTeclado - alturaAtual >= DELTA_MINIMA_TECLADO;
+  // Não reutiliza offsets após o teclado fechar: há relatos de valores transitórios no WebKit.
+  if (!viewport || !tecladoReduziuViewport) return 0;
+
+  const offset = eixo === "y" ? viewport.offsetTop : viewport.offsetLeft;
+  const pagina = eixo === "y" ? viewport.pageTop : viewport.pageLeft;
+  const scrollDocumento = eixo === "y" ? window.scrollY : window.scrollX;
+  const derivadoDaPagina = pagina - scrollDocumento;
+
+  // A geometria normal satisfaz pageTop = scrollY + offsetTop. Um relatório do WebKit
+  // descreve offsetTop subestimado em relação a pageTop no iOS 26; nesse caso, usa-se
+  // o deslocamento derivado da coordenada de página. Se não houver divergência útil,
+  // mantém-se o offset padrão e recorre-se ao outro valor apenas se ele for finito.
+  if (Number.isFinite(offset) && Number.isFinite(derivadoDaPagina)) {
+    if (derivadoDaPagina > offset + 1) return derivadoDaPagina;
+    return offset;
+  }
+  if (Number.isFinite(derivadoDaPagina)) return derivadoDaPagina;
+  return Number.isFinite(offset) ? offset : 0;
+}
+
+function restaurarPosicaoDocumento() {
+  if (!raiz.classList.contains("campo-em-edicao")) return;
+  if (Math.abs(window.scrollX - scrollBloqueadoX) > 1 ||
+      Math.abs(window.scrollY - scrollBloqueadoY) > 1) {
+    window.scrollTo(scrollBloqueadoX, scrollBloqueadoY);
+  }
+}
+
+function sincronizarViewportDoCampo() {
+  if (!raiz.classList.contains("campo-em-edicao")) return;
+  if (frameViewport) cancelAnimationFrame(frameViewport);
+  frameViewport = requestAnimationFrame(() => {
+    frameViewport = 0;
+    if (!raiz.classList.contains("campo-em-edicao")) return;
+    const viewport = window.visualViewport;
+    const alturaViewport = Math.max(1, viewport?.height ?? window.innerHeight);
+    const larguraViewport = Math.max(1, viewport?.width ?? window.innerWidth);
+    const deslocamentoTopo = deslocamentoViewportVisual("y", viewport);
+    const deslocamentoEsquerda = deslocamentoViewportVisual("x", viewport);
+
+    raiz.style.setProperty("--viewport-height", `${alturaViewport}px`);
+    raiz.style.setProperty("--viewport-width", `${larguraViewport}px`);
+    raiz.style.setProperty("--visual-viewport-offset-top", `${deslocamentoTopo}px`);
+    raiz.style.setProperty("--visual-viewport-offset-left", `${deslocamentoEsquerda}px`);
+
+    // Corrige o deslocamento residual usando a posição realmente renderizada do body.
+    // Isso não depende exclusivamente de offsetTop, que pode divergir de pageTop no WebKit.
+    const limitesCorpo = corpo.getBoundingClientRect();
+    const topoCorrigido = deslocamentoTopo - limitesCorpo.top;
+    const esquerdaCorrigida = deslocamentoEsquerda - limitesCorpo.left;
+    if (Number.isFinite(topoCorrigido)) {
+      raiz.style.setProperty("--visual-viewport-offset-top", `${Math.abs(topoCorrigido) < 0.5 ? 0 : topoCorrigido}px`);
+    }
+    if (Number.isFinite(esquerdaCorrigida)) {
+      raiz.style.setProperty("--visual-viewport-offset-left", `${Math.abs(esquerdaCorrigida) < 0.5 ? 0 : esquerdaCorrigida}px`);
+    }
+
+    // Centraliza o cartão na área visível acima do teclado. Se ele não couber
+    // inteiro, prioriza o topo seguro.
+    const alturaCartao = cartao.getBoundingClientRect().height;
+    const topoCard = Math.max(margemTopoSegura, (alturaViewport - alturaCartao) / 2);
+    raiz.style.setProperty("--card-screen-top", `${topoCard}px`);
+  });
+}
+
+campoLink.addEventListener("focus", () => {
+  if (!raiz.classList.contains("campo-em-edicao")) {
+    // Para foco programático/teclado, não houve pointerdown: registra o estado aqui.
+    if (!snapshotPreFocoPronto) capturarEstadoAntesDoFoco();
+    snapshotPreFocoPronto = false;
+    raiz.classList.add("campo-em-edicao");
+    corpo.classList.add("campo-em-edicao");
+  }
+  sincronizarViewportDoCampo();
+});
+
+campoLink.addEventListener("blur", () => {
+  window.setTimeout(() => {
+    if (document.activeElement === campoLink) return;
+    if (frameViewport) cancelAnimationFrame(frameViewport);
+    frameViewport = 0;
+    raiz.classList.remove("campo-em-edicao");
+    corpo.classList.remove("campo-em-edicao");
+    ["--viewport-height", "--viewport-width", "--visual-viewport-offset-top", "--visual-viewport-offset-left", "--card-screen-top"]
+      .forEach((propriedade) => raiz.style.removeProperty(propriedade));
+    if (window.scrollX !== scrollBloqueadoX || window.scrollY !== scrollBloqueadoY) {
+      window.scrollTo(scrollBloqueadoX, scrollBloqueadoY);
+    }
+    alturaViewportAntesDoTeclado = window.visualViewport?.height ?? window.innerHeight;
+    snapshotPreFocoPronto = false;
+  }, 300);
+});
+
+function aoRedimensionarViewport() {
+  if (raiz.classList.contains("campo-em-edicao")) {
+    sincronizarViewportDoCampo();
+  } else {
+    alturaViewportAntesDoTeclado = window.visualViewport?.height ?? window.innerHeight;
+  }
+}
+
+window.addEventListener("scroll", restaurarPosicaoDocumento, { passive: true });
+window.visualViewport?.addEventListener("resize", aoRedimensionarViewport);
+window.visualViewport?.addEventListener("scroll", sincronizarViewportDoCampo);
+window.addEventListener("resize", aoRedimensionarViewport);
 </script>
 </body>
 </html>

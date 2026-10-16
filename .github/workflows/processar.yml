@@ -1,18 +1,24 @@
 name: Processar
-# A página envia a foto para a branch "tmp" (entrada/<id>.<ext>) e dispara este workflow.
-# O resultado vai para saida/<id>.jpg na mesma branch; a página baixa e o workflow
-# "Limpar" esconde tudo depois de ~1h.
-run-name: processar ${{ inputs.id }}
+# Dois jeitos de pedir um processamento:
+# - pela página: a seta abre uma issue já preenchida ("processar <versão>", com as opções
+#   no corpo); você anexa a foto (ou cola o link dela), confirma no GitHub e a issue dispara
+#   este workflow. Só issues abertas pelo dono do repositório são atendidas.
+# - à mão, em Actions → Processar → Run workflow (com o link da foto).
+# O run-name é sempre "processar <versão>", para a página achar a execução dela.
+# O resultado vai para saida/<versão>.jpg na branch "tmp"; o workflow "Limpar" a esconde depois de ~1h.
+run-name: ${{ github.event_name == 'issues' && github.event.issue.title || format('processar {0}', inputs.versao) }}
 
 on:
+  issues:
+    types: [opened]
   workflow_dispatch:
     inputs:
-      id:
-        description: Identificador do pedido
+      url:
+        description: Link da foto
         required: true
         type: string
-      ext:
-        description: Extensão da foto enviada
+      versao:
+        description: Identificador (letras, números e hífen; 6 a 64)
         required: true
         type: string
       escala:
@@ -33,28 +39,31 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   processar:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.issue.user.login == github.repository_owner &&
+       startsWith(github.event.issue.title, 'processar '))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validar o pedido
+      - name: Ler o pedido
+        id: pedido
         env:
-          ID: ${{ inputs.id }}
-          EXT: ${{ inputs.ext }}
-          ESCALA: ${{ inputs.escala }}
-          PERFIL: ${{ inputs.perfil }}
-          PELOS: ${{ inputs.pelos }}
-        run: |
-          fail() { echo "::error::$1"; exit 1; }
-          [[ "$ID" =~ ^[A-Za-z0-9-]{6,64}$ ]] || fail "Identificador inválido."
-          [[ "$EXT" =~ ^(jpg|jpeg|png|webp|heic|heif|bmp|tif|tiff)$ ]] || fail "Formato de foto não aceito: $EXT"
-          [[ "$ESCALA" =~ ^[1-4]$ ]] || fail "Escala inválida (use 1 a 4)."
-          [[ "$PERFIL" =~ ^(auto|dia|noite)$ ]] || fail "Perfil inválido."
-          [[ "$PELOS" =~ ^[0-3](\.[0-9]+)?$ ]] || fail "Valor de pelos inválido."
+          EVENTO: ${{ github.event_name }}
+          TITULO: ${{ github.event.issue.title }}
+          CORPO: ${{ github.event.issue.body }}
+          URL_MANUAL: ${{ inputs.url }}
+          VERSAO_MANUAL: ${{ inputs.versao }}
+          ESCALA_MANUAL: ${{ inputs.escala }}
+          PERFIL_MANUAL: ${{ inputs.perfil }}
+          PELOS_MANUAL: ${{ inputs.pelos }}
+        run: python3 scripts/pedido.py
 
       - uses: actions/setup-python@v5
         with:
@@ -63,50 +72,67 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: Trazer a branch tmp
+      - name: Baixar a foto
+        id: foto
+        env:
+          URL: ${{ steps.pedido.outputs.url }}
+          VERSAO: ${{ steps.pedido.outputs.versao }}
         run: |
+          arquivo=$(python scripts/baixar.py "$URL" trabalho/entrada "$VERSAO")
+          echo "arquivo=$arquivo" >> "$GITHUB_OUTPUT"
+
+      - name: Processar
+        env:
+          ARQUIVO: ${{ steps.foto.outputs.arquivo }}
+          ESCALA: ${{ steps.pedido.outputs.escala }}
+          PERFIL: ${{ steps.pedido.outputs.perfil }}
+          PELOS: ${{ steps.pedido.outputs.pelos }}
+        run: |
+          mkdir -p trabalho/saida
+          python realista.py "$ARQUIVO" -e "$ESCALA" -p "$PERFIL" --pelos "$PELOS" -o trabalho/saida
+          # o script nomeia a saída sozinho; o job só passa se ela existir
+          arq=$(ls trabalho/saida/*.jpg 2>/dev/null | head -n 1 || true)
+          [ -n "$arq" ] || { echo "::error::O realista.py não gerou a imagem (veja o log do passo)."; exit 1; }
+          mv "$arq" trabalho/resultado.jpg
+
+      - name: Gravar o resultado na branch tmp
+        env:
+          VERSAO: ${{ steps.pedido.outputs.versao }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           if ! git ls-remote --exit-code --heads origin tmp >/dev/null 2>&1; then
             echo "::error::A branch tmp não existe. Rode o workflow Limpar uma vez."
             exit 1
           fi
-          git fetch -q origin +refs/heads/tmp:refs/remotes/origin/tmp
-          git show "origin/tmp:entrada/${{ inputs.id }}.${{ inputs.ext }}" > /dev/null 2>&1 \
-            || { echo "::error::Não achei a foto enviada (entrada/${{ inputs.id }}.${{ inputs.ext }})."; exit 1; }
-          mkdir -p trabalho/entrada
-          git show "origin/tmp:entrada/${{ inputs.id }}.${{ inputs.ext }}" > "trabalho/entrada/${{ inputs.id }}.${{ inputs.ext }}"
-
-      - name: Processar
-        env:
-          ID: ${{ inputs.id }}
-          EXT: ${{ inputs.ext }}
-          ESCALA: ${{ inputs.escala }}
-          PERFIL: ${{ inputs.perfil }}
-          PELOS: ${{ inputs.pelos }}
-        run: |
-          mkdir -p trabalho/saida
-          python realista.py "trabalho/entrada/$ID.$EXT" -e "$ESCALA" -p "$PERFIL" --pelos "$PELOS" -o trabalho/saida
-          # o script nomeia a saída sozinho; o job só passa se ela existir
-          arq=$(ls trabalho/saida/*.jpg 2>/dev/null | head -n 1 || true)
-          [ -n "$arq" ] || { echo "::error::O realista.py não gerou a imagem (veja o log do passo)."; exit 1; }
-          mv "$arq" "trabalho/resultado.jpg"
-
-      - name: Gravar o resultado na branch tmp
-        env:
-          ID: ${{ inputs.id }}
-          EXT: ${{ inputs.ext }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           for espera in 2 4 8 16; do
             git fetch -q origin +refs/heads/tmp:refs/remotes/origin/tmp
             git checkout -q -B tmp-trabalho origin/tmp
             mkdir -p saida
-            cp trabalho/resultado.jpg "saida/$ID.jpg"
-            git add "saida/$ID.jpg"
-            git rm -q --ignore-unmatch "entrada/$ID.$EXT"
-            git commit -q -m "saida: $ID"
+            cp trabalho/resultado.jpg "saida/$VERSAO.jpg"
+            git add "saida/$VERSAO.jpg"
+            git commit -q -m "saida: $VERSAO"
             git push -q origin tmp-trabalho:refs/heads/tmp && exit 0
             sleep "$espera"
           done
           echo "::error::Não consegui gravar o resultado."
           exit 1
+
+      - name: Tirar a foto da issue e fechar
+        if: always() && github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMERO: ${{ github.event.issue.number }}
+          RESULTADO: ${{ job.status }}
+          EXECUCAO: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          api="repos/$GITHUB_REPOSITORY/issues/$NUMERO"
+          # tira o link da foto do texto; o histórico de edições da issue ainda guarda a versão anterior
+          gh api -X PATCH "$api" -f body="Pedido processado. A foto foi retirada do texto desta issue." >/dev/null || true
+          if [ "$RESULTADO" = "success" ]; then
+            gh api -X POST "$api/comments" -f body="Pronto: $EXECUCAO" >/dev/null || true
+            gh api -X PATCH "$api" -f state=closed -f state_reason=completed >/dev/null
+          else
+            gh api -X POST "$api/comments" -f body="O processamento falhou. Motivo na execução: $EXECUCAO" >/dev/null || true
+            gh api -X PATCH "$api" -f state=closed -f state_reason=not_planned >/dev/null
+          fi
