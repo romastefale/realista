@@ -231,6 +231,7 @@ const LIMITE_MS = 20 * 60_000; // tempo para anexar a foto, confirmar a issue e 
 const intervalo = (n) => (n < 30 ? 10_000 : 30_000);
 
 const $ = (s) => document.querySelector(s);
+const DICA = "Sem link, toque na seta e anexe a foto na página do GitHub que abrir.";
 const st = { carregando: $("#st-carregando"), pronto: $("#st-pronto"), erro: $("#st-erro") };
 let versao = "";
 let formato = "jpg";
@@ -295,20 +296,27 @@ async function motivoDaFalha(id) {
   return "O processamento falhou.";
 }
 
-// O arquivo pode levar alguns segundos para aparecer depois do push.
+// O arquivo pode levar alguns segundos para aparecer depois do push. Se o PNG passou do
+// limite do GitHub, o workflow entrega um JPG de alta qualidade no lugar: tenta os dois.
 async function baixarResultado() {
+  const tipos = { png: "image/png", jpg: "image/jpeg" };
+  const tentativas = formato === "png" ? ["png", "jpg"] : ["jpg"];
   let ultimo = 0;
   for (let i = 0; i < 8; i++) {
-    const r = await fetch(`${RESULTADOS}/${versao}.${formato}`);
-    if (r.ok) {
-      const blob = new Blob([await r.arrayBuffer()], { type: formato === "png" ? "image/png" : "image/jpeg" });
+    for (const ext of tentativas) {
+      const r = await fetch(`${RESULTADOS}/${versao}.${ext}`);
+      if (!r.ok) { ultimo = r.status; continue; }
+      const blob = new Blob([await r.arrayBuffer()], { type: tipos[ext] });
       if (resultado) URL.revokeObjectURL(resultado.url);
-      resultado = { url: URL.createObjectURL(blob), nome: `realista-${versao}.${formato}` };
+      if (ext !== formato) {
+        $("#dica").textContent = "O PNG passou do limite de 100 MB do GitHub, então vem em JPG de alta qualidade.";
+        formato = ext;
+      }
+      resultado = { url: URL.createObjectURL(blob), nome: `realista-${versao}.${ext}` };
       $("#imagem").src = resultado.url;
       $("#previa").classList.add("on");
       return;
     }
-    ultimo = r.status;
     await esperar(3000);
   }
   throw new Error(`Não consegui baixar o resultado (o GitHub respondeu ${ultimo}).`);
@@ -335,6 +343,7 @@ $("#form").addEventListener("submit", (e) => {
   }
   versao = novaVersao();
   formato = $("#formato").value;
+  $("#dica").textContent = DICA;
   const corpo = [
     link,
     `perfil=${$("#perfil").value}`,

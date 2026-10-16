@@ -97,10 +97,22 @@ jobs:
           [ -n "$arq" ] || { echo "::error::O realista.py não gerou a imagem (veja o log do passo)."; exit 1; }
           mv "$arq" "trabalho/resultado.$FORMATO"
 
+      - name: Ajustar o tamanho
+        id: ajuste
+        env:
+          FORMATO: ${{ steps.pedido.outputs.formato }}
+        run: |
+          # PNG acima de ~90 MiB não cabe no GitHub (100 MB por arquivo): recomprime sem perda
+          # e, se ainda passar, entrega JPG de alta qualidade. A página baixa o que existir.
+          final=$(python scripts/ajustar.py "trabalho/resultado.$FORMATO")
+          echo "arquivo=$final" >> "$GITHUB_OUTPUT"
+          echo "ext=${final##*.}" >> "$GITHUB_OUTPUT"
+
       - name: Gravar o resultado na branch tmp
         env:
           VERSAO: ${{ steps.pedido.outputs.versao }}
-          FORMATO: ${{ steps.pedido.outputs.formato }}
+          ARQUIVO: ${{ steps.ajuste.outputs.arquivo }}
+          EXT: ${{ steps.ajuste.outputs.ext }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
@@ -112,13 +124,13 @@ jobs:
             git fetch -q origin +refs/heads/tmp:refs/remotes/origin/tmp
             git checkout -q -B tmp-trabalho origin/tmp
             mkdir -p saida
-            cp "trabalho/resultado.$FORMATO" "saida/$VERSAO.$FORMATO"
-            git add "saida/$VERSAO.$FORMATO"
+            cp "$ARQUIVO" "saida/$VERSAO.$EXT"
+            git add "saida/$VERSAO.$EXT"
             git commit -q -m "saida: $VERSAO"
             git push -q origin tmp-trabalho:refs/heads/tmp && exit 0
             sleep "$espera"
           done
-          echo "::error::Não consegui gravar o resultado. Se for um PNG, o arquivo pode passar de 100 MB, o limite do GitHub; tente JPG."
+          echo "::error::Não consegui gravar o resultado."
           exit 1
 
       - name: Tirar a foto da issue e fechar
