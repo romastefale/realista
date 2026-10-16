@@ -5,7 +5,7 @@ name: Processar
 #   este workflow. Só issues abertas pelo dono do repositório são atendidas.
 # - à mão, em Actions → Processar → Run workflow (com o link da foto).
 # O run-name é sempre "processar <versão>", para a página achar a execução dela.
-# O resultado vai para saida/<versão>.jpg na branch "tmp"; o workflow "Limpar" a esconde depois de ~1h.
+# O resultado vai para saida/<versão>.jpg (ou .png) na branch "tmp"; o workflow "Limpar" a esconde depois de ~1h.
 run-name: ${{ github.event_name == 'issues' && github.event.issue.title || format('processar {0}', inputs.versao) }}
 
 on:
@@ -36,6 +36,11 @@ on:
         required: false
         type: string
         default: "1.0"
+      formato:
+        description: jpg ou png
+        required: false
+        type: string
+        default: jpg
 
 permissions:
   contents: write
@@ -63,6 +68,7 @@ jobs:
           ESCALA_MANUAL: ${{ inputs.escala }}
           PERFIL_MANUAL: ${{ inputs.perfil }}
           PELOS_MANUAL: ${{ inputs.pelos }}
+          FORMATO_MANUAL: ${{ inputs.formato }}
         run: python3 scripts/pedido.py
 
       - uses: actions/setup-python@v5
@@ -87,17 +93,21 @@ jobs:
           ESCALA: ${{ steps.pedido.outputs.escala }}
           PERFIL: ${{ steps.pedido.outputs.perfil }}
           PELOS: ${{ steps.pedido.outputs.pelos }}
+          FORMATO: ${{ steps.pedido.outputs.formato }}
         run: |
           mkdir -p trabalho/saida
-          python realista.py "$ARQUIVO" -e "$ESCALA" -p "$PERFIL" --pelos "$PELOS" -o trabalho/saida
+          extra=()
+          [ "$FORMATO" = "png" ] && extra=(--png)
+          python realista.py "$ARQUIVO" -e "$ESCALA" -p "$PERFIL" --pelos "$PELOS" "${extra[@]}" -o trabalho/saida
           # o script nomeia a saída sozinho; o job só passa se ela existir
-          arq=$(ls trabalho/saida/*.jpg 2>/dev/null | head -n 1 || true)
+          arq=$(ls trabalho/saida/*."$FORMATO" 2>/dev/null | head -n 1 || true)
           [ -n "$arq" ] || { echo "::error::O realista.py não gerou a imagem (veja o log do passo)."; exit 1; }
-          mv "$arq" trabalho/resultado.jpg
+          mv "$arq" "trabalho/resultado.$FORMATO"
 
       - name: Gravar o resultado na branch tmp
         env:
           VERSAO: ${{ steps.pedido.outputs.versao }}
+          FORMATO: ${{ steps.pedido.outputs.formato }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
@@ -109,8 +119,8 @@ jobs:
             git fetch -q origin +refs/heads/tmp:refs/remotes/origin/tmp
             git checkout -q -B tmp-trabalho origin/tmp
             mkdir -p saida
-            cp trabalho/resultado.jpg "saida/$VERSAO.jpg"
-            git add "saida/$VERSAO.jpg"
+            cp "trabalho/resultado.$FORMATO" "saida/$VERSAO.$FORMATO"
+            git add "saida/$VERSAO.$FORMATO"
             git commit -q -m "saida: $VERSAO"
             git push -q origin tmp-trabalho:refs/heads/tmp && exit 0
             sleep "$espera"
