@@ -1,0 +1,112 @@
+name: Processar
+# A página envia a foto para a branch "tmp" (entrada/<id>.<ext>) e dispara este workflow.
+# O resultado vai para saida/<id>.jpg na mesma branch; a página baixa e o workflow
+# "Limpar" esconde tudo depois de ~1h.
+run-name: processar ${{ inputs.id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      id:
+        description: Identificador do pedido
+        required: true
+        type: string
+      ext:
+        description: Extensão da foto enviada
+        required: true
+        type: string
+      escala:
+        description: Upscale (1 a 4)
+        required: false
+        type: string
+        default: "2"
+      perfil:
+        description: auto, dia ou noite
+        required: false
+        type: string
+        default: auto
+      pelos:
+        description: Intensidade do realce dos pelos (0 a 3)
+        required: false
+        type: string
+        default: "1.0"
+
+permissions:
+  contents: write
+
+jobs:
+  processar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar o pedido
+        env:
+          ID: ${{ inputs.id }}
+          EXT: ${{ inputs.ext }}
+          ESCALA: ${{ inputs.escala }}
+          PERFIL: ${{ inputs.perfil }}
+          PELOS: ${{ inputs.pelos }}
+        run: |
+          fail() { echo "::error::$1"; exit 1; }
+          [[ "$ID" =~ ^[A-Za-z0-9-]{6,64}$ ]] || fail "Identificador inválido."
+          [[ "$EXT" =~ ^(jpg|jpeg|png|webp|heic|heif|bmp|tif|tiff)$ ]] || fail "Formato de foto não aceito: $EXT"
+          [[ "$ESCALA" =~ ^[1-4]$ ]] || fail "Escala inválida (use 1 a 4)."
+          [[ "$PERFIL" =~ ^(auto|dia|noite)$ ]] || fail "Perfil inválido."
+          [[ "$PELOS" =~ ^[0-3](\.[0-9]+)?$ ]] || fail "Valor de pelos inválido."
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Trazer a branch tmp
+        run: |
+          if ! git ls-remote --exit-code --heads origin tmp >/dev/null 2>&1; then
+            echo "::error::A branch tmp não existe. Rode o workflow Limpar uma vez."
+            exit 1
+          fi
+          git fetch -q origin +refs/heads/tmp:refs/remotes/origin/tmp
+          git show "origin/tmp:entrada/${{ inputs.id }}.${{ inputs.ext }}" > /dev/null 2>&1 \
+            || { echo "::error::Não achei a foto enviada (entrada/${{ inputs.id }}.${{ inputs.ext }})."; exit 1; }
+          mkdir -p trabalho/entrada
+          git show "origin/tmp:entrada/${{ inputs.id }}.${{ inputs.ext }}" > "trabalho/entrada/${{ inputs.id }}.${{ inputs.ext }}"
+
+      - name: Processar
+        env:
+          ID: ${{ inputs.id }}
+          EXT: ${{ inputs.ext }}
+          ESCALA: ${{ inputs.escala }}
+          PERFIL: ${{ inputs.perfil }}
+          PELOS: ${{ inputs.pelos }}
+        run: |
+          mkdir -p trabalho/saida
+          python realista.py "trabalho/entrada/$ID.$EXT" -e "$ESCALA" -p "$PERFIL" --pelos "$PELOS" -o trabalho/saida
+          # o script nomeia a saída sozinho; o job só passa se ela existir
+          arq=$(ls trabalho/saida/*.jpg 2>/dev/null | head -n 1 || true)
+          [ -n "$arq" ] || { echo "::error::O realista.py não gerou a imagem (veja o log do passo)."; exit 1; }
+          mv "$arq" "trabalho/resultado.jpg"
+
+      - name: Gravar o resultado na branch tmp
+        env:
+          ID: ${{ inputs.id }}
+          EXT: ${{ inputs.ext }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          for espera in 2 4 8 16; do
+            git fetch -q origin +refs/heads/tmp:refs/remotes/origin/tmp
+            git checkout -q -B tmp-trabalho origin/tmp
+            mkdir -p saida
+            cp trabalho/resultado.jpg "saida/$ID.jpg"
+            git add "saida/$ID.jpg"
+            git rm -q --ignore-unmatch "entrada/$ID.$EXT"
+            git commit -q -m "saida: $ID"
+            git push -q origin tmp-trabalho:refs/heads/tmp && exit 0
+            sleep "$espera"
+          done
+          echo "::error::Não consegui gravar o resultado."
+          exit 1

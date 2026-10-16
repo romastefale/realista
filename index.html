@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Cor da barra do navegador: uma por modo, escolhida pelo próprio navegador. O
+     Safari nem sempre redesenha a barra quando um script troca essa cor ao vivo. -->
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#4a78e8">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d1838">
+<script>
+/* Ao trocar o modo claro/escuro com a página aberta, o Safari às vezes mantém o fundo
+   e o vidro (backdrop-filter) do modo anterior. A classe "repintando" desliga o
+   desfoque e mexe no fundo por um quadro, o que obriga o redesenho. */
+(() => {
+  const esquemaEscuro = window.matchMedia("(prefers-color-scheme: dark)");
+  const raiz = document.documentElement;
+  function repintar() {
+    raiz.classList.add("repintando");
+    requestAnimationFrame(() => requestAnimationFrame(() => raiz.classList.remove("repintando")));
+  }
+  if (typeof esquemaEscuro.addEventListener === "function") esquemaEscuro.addEventListener("change", repintar);
+  else if (typeof esquemaEscuro.addListener === "function") esquemaEscuro.addListener(repintar);
+})();
+</script>
+<title>Realista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols+2&text=%E2%9D%AF&display=swap">
+<style>
+/* ── Fundo: só CSS, proporcional à tela ─────────────────────────────────────
+   Camada fixa de 100lvh (a viewport grande): não muda de tamanho quando a
+   barra do navegador aparece ou some. As manchas são gradientes radiais em
+   vmax, então mantêm o formato em qualquer proporção; as posições em % se
+   espalham pela tela. Uma máscara vertical deixa o topo e a base na cor
+   sólida das barras (--page-edge). */
+:root{
+  --page-edge:#4a78e8;
+  --base:linear-gradient(180deg,#4a78e8 0%,#4a78e8 2%,#507ee9 6%,#628ced 10%,#7aa0f2 14%,#97b6f6 18%,#b5ccfa 22%,#cfdffd 26%,#e2ecff 30%,#e9f1ff 34%,#eef6ff 50%,#eaf3fb 66%,#e3eefb 70%,#d0e0fa 74%,#b5cdf8 78%,#97b7f5 82%,#7aa1f1 86%,#628ced 90%,#507ee9 94%,#4a78e8 98%,#4a78e8 100%);
+  --campos:
+    radial-gradient(44vmax 26vmax at 10% 36%, rgb(127 184 255 / 0.72), transparent 70%),
+    radial-gradient(40vmax 28vmax at 90% 40%, rgb(111 224 240 / 0.66), transparent 70%),
+    radial-gradient(48vmax 20vmax at 32% 58%, rgb(154 168 255 / 0.6), transparent 70%),
+    radial-gradient(34vmax 24vmax at 76% 66%, rgb(142 240 210 / 0.55), transparent 70%),
+    radial-gradient(36vmax 22vmax at 18% 72%, rgb(185 166 255 / 0.5), transparent 70%),
+    radial-gradient(24vmax 30vmax at 58% 42%, rgb(168 208 255 / 0.55), transparent 70%),
+    radial-gradient(30vmax 18vmax at 92% 80%, rgb(122 208 245 / 0.56), transparent 70%);
+  --text:#1c1c1e; --bar-text:#0a0b0d; --bar-sub:rgba(0,0,0,.6);
+  --vidro-tint:rgba(238,240,245,0.3);
+  --frost:blur(5px) saturate(1.15);
+  --glass-float:0 10px 28px rgba(30,20,90,.16), 0 2px 6px rgba(30,20,90,.08);
+  --glass-ease:cubic-bezier(.34,1.36,.42,1);
+  --focus:rgba(28,28,30,.5);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --page-edge:#0d1838;
+  --base:linear-gradient(180deg,#0d1838 0%,#0d1838 2%,#0d1939 6%,#0e1b3d 10%,#0f1e43 14%,#10214a 18%,#112450 22%,#122756 26%,#13295a 30%,#132a5c 34%,#0f2f4f 50%,#161f52 66%,#161f51 70%,#151e4e 74%,#131d4a 78%,#111c45 82%,#101a40 86%,#0e193c 90%,#0d1839 94%,#0d1838 98%,#0d1838 100%);
+  --campos:
+    radial-gradient(44vmax 26vmax at 10% 36%, rgb(47 111 224 / 0.44), transparent 70%),
+    radial-gradient(40vmax 28vmax at 90% 40%, rgb(31 168 200 / 0.42), transparent 70%),
+    radial-gradient(48vmax 20vmax at 32% 58%, rgb(75 80 216 / 0.36), transparent 70%),
+    radial-gradient(34vmax 24vmax at 76% 66%, rgb(31 184 154 / 0.28), transparent 70%),
+    radial-gradient(36vmax 22vmax at 18% 72%, rgb(106 79 216 / 0.3), transparent 70%),
+    radial-gradient(24vmax 30vmax at 58% 42%, rgb(42 138 208 / 0.32), transparent 70%),
+    radial-gradient(30vmax 18vmax at 92% 80%, rgb(60 124 224 / 0.34), transparent 70%);
+  --text:#f5f5f7; --bar-text:#fff; --bar-sub:rgba(255,255,255,.6);
+  --vidro-tint:rgba(18,18,20,0.3);
+  --focus:rgba(245,245,247,.62);
+  color-scheme:dark;
+}}
+html{background-color:var(--page-edge);isolation:isolate}
+html,body{touch-action:pan-x pan-y}
+html::before,html::after{content:"";position:fixed;z-index:-1;left:var(--visual-viewport-offset-left,0px);right:auto;width:var(--viewport-width,100%);top:var(--visual-viewport-offset-top,0px);height:100vh;height:100lvh;pointer-events:none}
+html::before{background:var(--base)}
+/* Redesenho forçado na troca de modo (ver o script no <head>). */
+html.repintando .frost{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.repintando::before,html.repintando::after{opacity:.995}
+/* Com o teclado aberto, o fundo ocupa só a área visível: o degradê e as manchas se
+   reorganizam nela, com as pontas sólidas no topo e logo acima do teclado. A
+   transição curta acompanha a animação do teclado em vez de pular. */
+html.campo-em-edicao::before,html.campo-em-edicao::after{height:var(--viewport-height,100lvh)}
+html::before,html::after{transition:height .25s ease-out}
+@media (prefers-reduced-motion:reduce){html::before,html::after{transition:none}}
+html::after{background:var(--campos);
+  -webkit-mask-image:linear-gradient(180deg,transparent 0 14%,#000 30% 70%,transparent 86% 100%);
+          mask-image:linear-gradient(180deg,transparent 0 14%,#000 30% 70%,transparent 86% 100%)}
+
+/* ── Card: tudo medido numa unidade proporcional à tela ─────────────────────
+   --u acompanha o menor lado da tela (vmin), com piso e teto. O card inteiro
+   (larguras, fontes, raios, espaços) está em em, então escala junto.
+   Centralizado na viewport pequena (100svh): a área sempre visível, que não
+   muda enquanto a barra do navegador anima. */
+:root{--u:clamp(15px, 1.1vmin + 9px, 24px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;min-height:100svh;display:grid;place-items:center;
+  padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+  color:var(--text);background-color:transparent;
+  font-family:system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+/* Durante a edição, a posição e a altura acompanham a área realmente visível. */
+html.campo-em-edicao{overflow:hidden;overscroll-behavior:none}
+body.campo-em-edicao{position:fixed;top:var(--visual-viewport-offset-top,0px);left:var(--visual-viewport-offset-left,0px);
+  width:var(--viewport-width,100%);height:var(--viewport-height,100svh);min-height:0;overflow:hidden;
+  place-items:start center;padding-top:var(--card-screen-top,16px);
+  overscroll-behavior:none}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.frost{background:var(--vidro-tint);-webkit-backdrop-filter:var(--frost);backdrop-filter:var(--frost)}
+
+.card{font-size:var(--u);width:min(38.75em,100%);border-radius:1.875em;padding:2.125em 1.375em 1.625em;box-shadow:var(--glass-float);
+  display:grid;gap:1.375em;justify-items:center}
+.card h1{margin:0;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:1.75em;font-weight:700;letter-spacing:-.03em;color:var(--bar-text);white-space:nowrap}
+/* O prompt do terminal na frente do nome: ❯ e o cursor _ piscando, na cor do texto.
+   A JetBrains Mono não tem o ❯; ele vem da Noto Sans Symbols 2 (só esse caractere),
+   igual em todo aparelho. Medido em pixels contra o "l": escala e subida para os dois
+   terem a mesma altura, com topo e base alinhados. */
+.chev{font-family:"Noto Sans Symbols 2",sans-serif;font-weight:400;font-size:.837em;line-height:0;vertical-align:.075em}
+.cursor{animation:pisca 1.1s steps(1) infinite}
+@keyframes pisca{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+.pill-bar{position:relative;width:100%;height:3.25em;border-radius:1.625em}
+.page-search{position:absolute;inset:0 3.06em 0 0;display:flex;align-items:center;gap:.125em;padding:0 0 0 1em;color:var(--bar-text)}
+.page-search input{flex:1;min-width:0;height:2.5em;border:0;outline:0;background:transparent;padding:0;
+  color:inherit;font:inherit;font-size:max(16px,1.0625em);letter-spacing:-.012em;caret-color:var(--bar-text);-webkit-appearance:none;appearance:none}
+.page-search input::placeholder{color:var(--bar-sub);opacity:1}
+.ps-sep[hidden]{display:none}
+.ps-sep{flex:0 0 auto;width:1px;height:1.25em;margin:0 .19em;background:currentColor;opacity:.16}
+.status{width:2.125em;height:2.125em;flex:0 0 auto;display:grid;place-items:center;color:var(--bar-sub);border:0;background:none;padding:0;border-radius:1.06em}
+.status svg{width:1.19em;height:1.19em}
+.status[hidden]{display:none}
+.spin{animation:gira .8s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
+.lupa{position:absolute;top:.5625em;right:.5625em;width:2.125em;height:2.125em;border-radius:1.06em;border:0;padding:0;
+  display:grid;place-items:center;color:var(--bar-text);box-shadow:var(--glass-float)}
+.lupa svg{width:.94em;height:.94em}
+/* Colar: ao lado da lupa, com o mesmo vidro e a mesma sombra. Some depois de colar e
+   volta se o texto colado mudar; colar de novo substitui o campo inteiro. */
+.colar{position:absolute;top:.5625em;right:3.0625em;width:2.125em;height:2.125em;border-radius:1.06em;border:0;padding:0;
+  display:grid;place-items:center;color:var(--bar-text);box-shadow:var(--glass-float)}
+.colar svg{width:.94em;height:.94em}
+.colar[hidden]{display:none}
+.colar:disabled{cursor:default;opacity:.55}
+.pill-bar.com-colar .page-search{right:5.56em}
+.lupa:disabled{cursor:default;opacity:.55}
+
+.downloads{display:flex;flex-wrap:wrap;justify-content:center;gap:.625em}
+.btn{display:inline-flex;align-items:center;gap:.5em;padding:.75em 1.375em;min-height:max(44px,2.75em);border-radius:999px;border:0;
+  font-size:.97em;font-weight:600;letter-spacing:-.006em;color:var(--bar-text);box-shadow:var(--glass-float);
+  transition:opacity .2s ease, transform .2s var(--glass-ease)}
+.btn:active{transform:scale(.975)}
+.btn:disabled{opacity:.4;cursor:default;box-shadow:none}
+.btn svg{width:1.03em;height:1.03em}
+/* Tela estreita: os três downloads cabem lado a lado. */
+@media (max-width:480px){.downloads{gap:.5em}.btn{padding:.75em .8em;gap:.35em}}
+.motivo{margin:-.5em 0 0;font-size:.85em;color:var(--bar-sub);text-align:center}
+.motivo[hidden]{display:none}
+
+/* ── Específico do realista ─────────────────────────────────────────────── */
+.escolher{position:absolute;inset:0 6.2em 0 0;display:flex;align-items:center;gap:.5em;padding:0 0 0 1em;border:0;background:none;
+  color:var(--bar-text);font:inherit;font-size:max(16px,1.0625em);letter-spacing:-.012em;text-align:left;min-width:0}
+.escolher span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.escolher.vazio span{color:var(--bar-sub)}
+.escolher svg{width:1.1em;height:1.1em;flex:0 0 auto;color:var(--bar-sub)}
+.opcoes{display:flex;flex-wrap:wrap;justify-content:center;gap:.5em}
+.opcao{display:inline-flex;align-items:center;gap:.4em;padding:.5em .9em;min-height:max(40px,2.5em);border-radius:999px;
+  font-size:.88em;color:var(--bar-text);box-shadow:var(--glass-float)}
+.opcao select{border:0;background:transparent;color:inherit;font:inherit;font-weight:600;padding:0 .2em;outline-offset:3px;-webkit-appearance:none;appearance:none;cursor:pointer}
+.opcao select option{color:#1c1c1e}
+.opcao small{color:var(--bar-sub);font-size:.92em}
+.previa{width:100%;max-height:50vh;display:none;border-radius:1.1em;overflow:hidden;box-shadow:var(--glass-float)}
+.previa.on{display:block}
+.previa img{display:block;width:100%;height:auto;max-height:50vh;object-fit:contain}
+dialog{border:0;border-radius:1.4em;padding:1.2em;max-width:min(28em,92vw);color:var(--text);font-size:15px;box-shadow:var(--glass-float)}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+dialog h2{margin:0 0 .4em;font-size:1.05em}
+dialog p{margin:.3em 0 .8em;color:var(--bar-sub);line-height:1.4}
+dialog input{width:100%;height:2.6em;border-radius:.8em;border:1px solid rgba(128,128,128,.4);background:rgba(255,255,255,.55);padding:0 .8em;font:inherit;font-size:16px;color:#1c1c1e}
+dialog .linha{display:flex;gap:.5em;justify-content:flex-end;margin-top:.9em}
+dialog .btn{min-height:2.5em;padding:.5em 1.1em}
+
+</style>
+</head>
+<body>
+<main class="card frost">
+  <h1><span class="prompt" aria-hidden="true"><span class="chev">❯</span><span class="cursor">_</span></span>realista</h1>
+
+  <input id="arquivo" type="file" accept="image/*,.heic,.heif" hidden>
+  <div class="pill-bar frost">
+    <button class="escolher vazio" type="button" id="escolher" aria-label="Escolher foto">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-8 8"/></svg>
+      <span id="nome-arquivo">Escolher foto</span>
+    </button>
+    <span class="status" id="st-carregando" role="status" aria-label="Processando" hidden style="position:absolute;top:.56em;right:5.25em">
+      <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9" /></svg>
+    </span>
+    <span class="status" id="st-pronto" role="status" aria-label="Pronto" hidden style="position:absolute;top:.56em;right:5.25em">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.4 4.4L19 7.3"/></svg>
+    </span>
+    <button class="status" type="button" id="st-erro" aria-label="Falhou. Ver motivo" hidden style="position:absolute;top:.56em;right:5.25em">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.4v.1"/></svg>
+    </button>
+    <button class="colar frost" type="button" id="chave" aria-label="Chave de acesso do GitHub">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 9.2-9.2M16 7l3 3M14 9l2 2"/></svg>
+    </button>
+    <button class="lupa frost" type="button" id="enviar" aria-label="Processar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m0 0-5 5m5-5 5 5"/></svg>
+    </button>
+  </div>
+
+  <div class="opcoes">
+    <label class="opcao frost"><small>Upscale</small>
+      <select id="escala"><option value="1">1×</option><option value="2" selected>2×</option><option value="3">3×</option><option value="4">4×</option></select></label>
+    <label class="opcao frost"><small>Perfil</small>
+      <select id="perfil"><option value="auto" selected>auto</option><option value="dia">dia</option><option value="noite">noite</option></select></label>
+    <label class="opcao frost"><small>Pelos</small>
+      <select id="pelos"><option value="0">0</option><option value="0.5">0,5</option><option value="1.0" selected>1</option><option value="1.5">1,5</option><option value="2.0">2</option></select></label>
+  </div>
+
+  <p class="motivo" id="motivo" role="alert" hidden></p>
+
+  <div class="previa frost" id="previa"><img id="imagem" alt="Resultado"></div>
+
+  <div class="downloads">
+    <button class="btn frost" type="button" disabled id="baixar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>JPG</button>
+  </div>
+</main>
+
+<dialog id="dlg-chave" class="frost">
+  <form method="dialog" id="form-chave">
+    <h2>Chave de acesso</h2>
+    <p>Cole um token do GitHub restrito a este repositório (Contents e Actions: leitura e escrita). Ele fica só neste navegador.</p>
+    <input id="campo-chave" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…" aria-label="Token">
+    <div class="linha">
+      <button class="btn frost" type="button" id="limpar-chave">Remover</button>
+      <button class="btn frost" type="submit" value="ok">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module">
+// Fluxo: a foto sobe para a branch "tmp" (entrada/<id>.<ext>) pela API do GitHub, o
+// workflow "Processar" roda o realista.py e grava saida/<id>.jpg na mesma branch, e a
+// página baixa o resultado. O workflow "Limpar" esconde tudo com mais de 1h.
+// Para usar outro repositório, troque as duas constantes abaixo.
+const DONO = "romastefale";
+const REPO = "realista";
+const RAMO = "tmp";
+const API = `https://api.github.com/repos/${DONO}/${REPO}`;
+const LIMITE_MS = 15 * 60_000;
+const INTERVALO_MS = 5_000;
+const EXTENSOES = { jpg: "jpg", jpeg: "jpeg", png: "png", webp: "webp", heic: "heic", heif: "heif", bmp: "bmp", tif: "tif", tiff: "tiff" };
+
+const $ = (s) => document.querySelector(s);
+const st = { carregando: $("#st-carregando"), pronto: $("#st-pronto"), erro: $("#st-erro") };
+let foto = null;
+let resultado = null;     // { url, nome }
+
+function guardar(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} }
+function ler(k) { try { return localStorage.getItem(k) || ""; } catch { return ""; } }
+const token = () => ler("realista-token");
+
+function estado(qual, motivo = "") {
+  for (const [k, el] of Object.entries(st)) el.hidden = k !== qual;
+  $("#enviar").disabled = qual === "carregando";
+  $("#escolher").disabled = qual === "carregando";
+  $("#motivo").textContent = motivo;
+  $("#motivo").hidden = true;
+  $("#baixar").disabled = qual !== "pronto";
+  if (qual !== "pronto") { $("#previa").classList.remove("on"); }
+}
+
+class Falha extends Error {}
+
+async function gh(caminho, opcoes = {}) {
+  const r = await fetch(`${API}${caminho}`, {
+    ...opcoes,
+    headers: { "X-GitHub-Api-Version": "2022-11-28", Accept: "application/vnd.github+json", Authorization: `Bearer ${token()}`, ...(opcoes.headers || {}) },
+  });
+  if (r.status === 401) throw new Falha("A chave não foi aceita. Toque na chave e cole de novo.");
+  if (r.status === 403 || r.status === 429) throw new Falha("O GitHub limitou as consultas, ou a chave não tem permissão. Tente de novo em alguns minutos.");
+  return r;
+}
+
+const esperar = (ms) => new Promise((ok) => setTimeout(ok, ms));
+
+function novoId() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+function paraBase64(arquivo) {
+  return new Promise((ok, erro) => {
+    const leitor = new FileReader();
+    leitor.onload = () => ok(String(leitor.result).split(",")[1]);
+    leitor.onerror = () => erro(new Falha("Não consegui ler a foto."));
+    leitor.readAsDataURL(arquivo);
+  });
+}
+
+async function enviarFoto(id, ext) {
+  const r = await gh(`/contents/entrada/${id}.${ext}`, {
+    method: "PUT",
+    body: JSON.stringify({ message: `entrada: ${id}`, content: await paraBase64(foto), branch: RAMO }),
+  });
+  if (r.status === 404 || r.status === 422) {
+    throw new Falha("Não achei a branch tmp. Rode o workflow Limpar uma vez (Actions → Limpar → Run workflow).");
+  }
+  if (!r.ok) throw new Falha(`O GitHub respondeu ${r.status} ao enviar a foto.`);
+}
+
+async function dispararWorkflow(id, ext) {
+  const r = await gh("/actions/workflows/processar.yml/dispatches", {
+    method: "POST",
+    body: JSON.stringify({
+      ref: "main",
+      inputs: { id, ext, escala: $("#escala").value, perfil: $("#perfil").value, pelos: $("#pelos").value },
+    }),
+  });
+  if (r.status !== 204) throw new Falha(`O GitHub respondeu ${r.status} ao iniciar o processamento.`);
+}
+
+async function acompanhar(id) {
+  const fim = Date.now() + LIMITE_MS;
+  let execucao = null;
+  while (Date.now() < fim) {
+    await esperar(INTERVALO_MS);
+    if (!execucao) {
+      const r = await gh("/actions/workflows/processar.yml/runs?event=workflow_dispatch&per_page=20");
+      if (!r.ok) throw new Falha(`O GitHub respondeu ${r.status}.`);
+      execucao = (await r.json()).workflow_runs.find((x) => x.name === `processar ${id}`) || null;
+      continue;
+    }
+    const r = await gh(`/actions/runs/${execucao.id}`);
+    if (!r.ok) throw new Falha(`O GitHub respondeu ${r.status}.`);
+    execucao = await r.json();
+    if (execucao.status !== "completed") continue;
+    if (execucao.conclusion === "success") return;
+    throw new Falha(await motivoDaFalha(execucao.id));
+  }
+  throw new Falha("Não vi o processamento terminar.");
+}
+
+async function motivoDaFalha(id) {
+  try {
+    const { jobs } = await (await gh(`/actions/runs/${id}/jobs`)).json();
+    for (const job of jobs) {
+      const notas = await (await gh(`/check-runs/${job.id}/annotations`)).json();
+      const nota = notas.find((n) => n.annotation_level === "failure" && !/exit code/i.test(n.message));
+      if (nota) return nota.message;
+    }
+  } catch {}
+  return "O processamento falhou.";
+}
+
+async function baixarResultado(id) {
+  const r = await gh(`/contents/saida/${id}.jpg?ref=${RAMO}`, { headers: { Accept: "application/vnd.github.raw+json" } });
+  if (!r.ok) throw new Falha(`O GitHub respondeu ${r.status} ao baixar o resultado.`);
+  const blob = new Blob([await r.arrayBuffer()], { type: "image/jpeg" });
+  if (resultado) URL.revokeObjectURL(resultado.url);
+  resultado = { url: URL.createObjectURL(blob), nome: `${foto.name.replace(/\.[^.]+$/, "")}_realista.jpg` };
+  $("#imagem").src = resultado.url;
+  $("#previa").classList.add("on");
+}
+
+$("#escolher").addEventListener("click", () => $("#arquivo").click());
+$("#arquivo").addEventListener("change", () => {
+  foto = $("#arquivo").files[0] || null;
+  $("#nome-arquivo").textContent = foto ? foto.name : "Escolher foto";
+  $("#escolher").classList.toggle("vazio", !foto);
+  estado("vazio");
+});
+
+$("#enviar").addEventListener("click", async () => {
+  if (!foto) return estado("erro", "Escolha uma foto primeiro.");
+  if (!token()) { $("#dlg-chave").showModal(); return; }
+  const ext = EXTENSOES[(foto.name.split(".").pop() || "").toLowerCase()];
+  if (!ext) return estado("erro", "Formato não aceito. Use JPG, PNG, WebP, HEIC, BMP ou TIFF.");
+  const id = novoId();
+  estado("carregando");
+  try {
+    await enviarFoto(id, ext);
+    await dispararWorkflow(id, ext);
+    await acompanhar(id);
+    await baixarResultado(id);
+    estado("pronto");
+    $("#previa").classList.add("on");
+  } catch (e) {
+    estado("erro", e instanceof Falha ? e.message : "Algo falhou. Tente de novo.");
+  }
+});
+
+$("#baixar").addEventListener("click", () => {
+  if (!resultado) return;
+  const a = Object.assign(document.createElement("a"), { href: resultado.url, download: resultado.nome });
+  a.click();
+});
+
+st.erro.addEventListener("click", () => ($("#motivo").hidden = !$("#motivo").hidden));
+
+$("#chave").addEventListener("click", () => { $("#campo-chave").value = ""; $("#dlg-chave").showModal(); });
+$("#form-chave").addEventListener("submit", () => {
+  const v = $("#campo-chave").value.trim();
+  if (v) guardar("realista-token", v);
+});
+$("#limpar-chave").addEventListener("click", () => { guardar("realista-token", null); $("#dlg-chave").close(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+name: Limpar
+# Esconde do histórico as fotos com mais de 1h (branch "tmp"). Também cria a branch
+# "tmp" na primeira vez: rode este workflow uma vez à mão (Actions → Limpar → Run workflow).
+# O agendamento do GitHub pode atrasar alguns minutos.
+run-name: limpar
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: limpar
+  cancel-in-progress: false
+
+jobs:
+  limpar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/limpar.sh
