@@ -5,7 +5,7 @@ name: Processar
 #   este workflow. Só issues abertas pelo dono do repositório são atendidas.
 # - à mão, em Actions → Processar → Run workflow (com o link da foto).
 # O run-name é sempre "processar <versão>", para a página achar a execução dela.
-# O upscale é sempre 2x. O resultado vai para saida/<versão>.jpg (ou .png) na branch "tmp"; o workflow "Limpar" a esconde depois de ~1h.
+# O upscale é sempre 2x e a saída é sempre PNG (se passar do limite do GitHub, vira JPG). O resultado vai para saida/<versão>.png (ou .jpg) na branch "tmp"; o workflow "Limpar" a esconde depois de ~1h.
 run-name: ${{ github.event_name == 'issues' && github.event.issue.title || format('processar {0}', inputs.versao) }}
 
 on:
@@ -31,11 +31,6 @@ on:
         required: false
         type: string
         default: "1.0"
-      formato:
-        description: jpg ou png
-        required: false
-        type: string
-        default: jpg
 
 permissions:
   contents: write
@@ -62,7 +57,6 @@ jobs:
           VERSAO_MANUAL: ${{ inputs.versao }}
           PERFIL_MANUAL: ${{ inputs.perfil }}
           PELOS_MANUAL: ${{ inputs.pelos }}
-          FORMATO_MANUAL: ${{ inputs.formato }}
         run: python3 scripts/pedido.py
 
       - uses: actions/setup-python@v5
@@ -86,30 +80,26 @@ jobs:
           ARQUIVO: ${{ steps.foto.outputs.arquivo }}
           PERFIL: ${{ steps.pedido.outputs.perfil }}
           PELOS: ${{ steps.pedido.outputs.pelos }}
-          FORMATO: ${{ steps.pedido.outputs.formato }}
         run: |
           mkdir -p trabalho/saida
-          extra=()
-          [ "$FORMATO" = "png" ] && extra=(--png)
-          python realista.py "$ARQUIVO" -e 2 --max-mp 100 -p "$PERFIL" --pelos "$PELOS" "${extra[@]}" -o trabalho/saida
+          python realista.py "$ARQUIVO" -e 2 --max-mp 100 -p "$PERFIL" --pelos "$PELOS" --png -o trabalho/saida
           # o script nomeia a saída sozinho; o job só passa se ela existir
-          arq=$(ls trabalho/saida/*."$FORMATO" 2>/dev/null | head -n 1 || true)
+          arq=$(ls trabalho/saida/*.png 2>/dev/null | head -n 1 || true)
           [ -n "$arq" ] || { echo "::error::O realista.py não gerou a imagem (veja o log do passo)."; exit 1; }
-          mv "$arq" "trabalho/resultado.$FORMATO"
+          mv "$arq" trabalho/resultado.png
 
       - name: Ajustar o tamanho
         id: ajuste
         env:
-          FORMATO: ${{ steps.pedido.outputs.formato }}
           ORIGINAL: ${{ steps.foto.outputs.arquivo }}
         run: |
           # PNG acima de ~90 MiB não cabe no GitHub (100 MB por arquivo): recomprime sem perda
           # e, se ainda passar, entrega JPG de alta qualidade. A página baixa o que existir.
-          final=$(python scripts/ajustar.py "trabalho/resultado.$FORMATO")
+          final=$(python scripts/ajustar.py trabalho/resultado.png)
           echo "arquivo=$final" >> "$GITHUB_OUTPUT"
           echo "ext=${final##*.}" >> "$GITHUB_OUTPUT"
           # a página lê estes avisos do workflow e mostra para você
-          if [ "${final##*.}" != "$FORMATO" ]; then
+          if [ "${final##*.}" != "png" ]; then
             echo "::warning::Aviso: o PNG passou do limite de 100 MB do GitHub e foi entregue em JPG de alta qualidade, com o mesmo tamanho em pixels."
           fi
           python scripts/conferir.py "$ORIGINAL" "$final"

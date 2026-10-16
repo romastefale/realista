@@ -203,7 +203,7 @@ button{font:inherit;cursor:pointer}
 
   <div class="downloads">
     <button class="btn frost" type="button" disabled id="baixar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg><span id="rotulo-baixar">JPG</span></button>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg><span id="rotulo-baixar">PNG</span></button>
   </div>
 </main>
 
@@ -225,9 +225,9 @@ const intervalo = (n) => (n < 30 ? 10_000 : 30_000);
 const $ = (s) => document.querySelector(s);
 const st = { carregando: $("#st-carregando"), pronto: $("#st-pronto"), erro: $("#st-erro") };
 let versao = "";
-let formato = "jpg";
+let formato = "png";
 // Valores iniciais do pedido. Ficam editáveis só na issue (no corpo, uma linha por opção).
-const PADRAO = { perfil: "dia", pelos: "1.0", formato: "jpg" };
+const PADRAO = { perfil: "dia", pelos: "1.0" };
 let resultado = null;
 
 function estado(qual, motivo = "") {
@@ -308,7 +308,7 @@ async function motivoDaFalha(id) {
 // limite do GitHub, o workflow entrega um JPG de alta qualidade no lugar: tenta os dois.
 async function baixarResultado() {
   const tipos = { png: "image/png", jpg: "image/jpeg" };
-  const tentativas = ["jpg", "png"];
+  const tentativas = ["png", "jpg"];
   let ultimo = 0;
   for (let i = 0; i < 8; i++) {
     for (const ext of tentativas) {
@@ -347,15 +347,14 @@ $("#form").addEventListener("submit", (e) => {
     if (!link) return estado("erro", "Esse link não é válido. Use um link que comece com https://.");
   }
   versao = novaVersao();
-  formato = PADRAO.formato;
+  formato = "png";
   $("#dica").hidden = true;
   const corpo = [
     ...(link ? [link] : []),
     `perfil=${PADRAO.perfil}`,
     `pelos=${PADRAO.pelos}`,
-    `formato=${PADRAO.formato}`,
     "",
-    "Opções (edite os valores acima se quiser): perfil dia ou noite; pelos de 0 a 3; formato jpg ou png.",
+    "Opções (edite os valores acima se quiser): perfil dia ou noite; pelos de 0 a 3.",
     ...(link ? [] : ["", "Anexe a foto aqui (arraste, cole ou toque no clipe) e confirme em Create."]),
   ].join("\n");
   const pedido = new URLSearchParams({ title: `processar ${versao}`, body: corpo });

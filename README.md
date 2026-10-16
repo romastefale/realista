@@ -8,7 +8,6 @@ Página para rodar o `realista.py` (foto com aspecto de iPhone, só código) pel
 2. Toque na seta. Abre no GitHub uma issue já preenchida. As opções ficam **só no corpo da issue**, uma por linha, e você pode editá-las antes de confirmar:
    - `perfil=dia` (ou `noite`)
    - `pelos=1.0` (de 0 a 3)
-   - `formato=jpg` (ou `png`)
 3. **Anexe a foto** na issue (ou, antes, cole na página o link de uma foto que já esteja online) e toque em *Create*. Você precisa estar logado como dono do repositório.
 4. Volte para a página: ela acompanha o processamento (1 a 3 minutos) e mostra o resultado, com botão para baixar.
 
@@ -17,7 +16,7 @@ Também dá para rodar à mão em **Actions → Processar → Run workflow**, in
 ## Como funciona
 
 - A issue (`processar <versão>`) dispara o workflow **Processar**. Só issues abertas pelo dono do repositório são atendidas.
-- O workflow baixa a foto, roda o `realista.py` e grava `saida/<versão>.jpg` na branch `tmp`. Depois tira a foto do texto da issue e a fecha.
+- O workflow baixa a foto, roda o `realista.py` e grava `saida/<versão>.png` na branch `tmp`. Depois tira a foto do texto da issue e a fecha.
 - A página baixa o resultado de `raw.githubusercontent.com`. Sem token, porque o repositório é público.
 - O workflow **Limpar** (a cada 15 min) reescreve a branch `tmp` sem os commits com mais de 1h.
 
@@ -36,7 +35,7 @@ Também dá para rodar à mão em **Actions → Processar → Run workflow**, in
 ## Observações
 
 - Agendamentos do GitHub atrasam; a foto some do histórico entre 1h e ~1h20. Em repositório público o GitHub desativa workflows agendados após 60 dias sem atividade.
-- PNG não perde qualidade, mas fica bem maior que o JPG (em 2×, uma foto de 12 MP pode passar de 80 MB). O JPG sai com qualidade 93.
+- A saída é sempre **PNG** (sem perda), que fica grande: em 2×, uma foto de 12 MP pode passar de 80 MB. Se passar do limite do GitHub, vira JPG (próximo item).
 - Perfis disponíveis: `dia` e `noite`, escolhidos sempre à mão (não há modo automático). Para criar outro, adicione uma entrada em `PERFIS` no `realista.py` e o nome em três lugares: `choices` do argumento `-p` no `realista.py`, a lista em `scripts/pedido.py` e o `<select id="perfil">` do `index.html`.
 - O upscale é sempre 2× e o limite de megapixels do script foi elevado a 100 MP (`--max-mp 100`), então uma foto de 12 MP sai com 8064×6048. Em teste, isso levou de 20 a 50 s e 3 a 4 GB de memória. O GitHub recusa arquivos acima de 100 MB, então um PNG acima de ~90 MiB é recomprimido sem perda e, se ainda passar, entregue como JPG de qualidade 95 (4:4:4); a página avisa e baixa o arquivo que existir.
 - **Avisos:** se o upscale sair diferente de 2× (foto original acima de ~50 MP) ou se um PNG virar JPG por causa do limite do GitHub, o workflow registra um aviso e a página o mostra no lugar da dica.
