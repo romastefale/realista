@@ -160,15 +160,15 @@ button{font:inherit;cursor:pointer}
 /* ── Específico do realista ─────────────────────────────────────────────── */
 .dica{margin:-.5em 0 0;font-size:.85em;line-height:1.4;color:var(--bar-sub);text-align:center}
 .dica[hidden]{display:none}
-/* Resultado: só um filete fino colado na imagem, sem moldura nem folga. A altura máxima desconta
-   o resto do card (título, barra, botão e espaços, medidos em em) e as margens da tela, para
-   tudo caber sem rolar. */
-:root{--hairline:rgba(0,0,0,.2)}
-@media (prefers-color-scheme:dark){:root{--hairline:rgba(255,255,255,.28)}}
-.previa{display:none;justify-self:center;width:auto;height:auto;max-width:100%;
-  max-height:max(8em,calc(100svh - 17.5em - max(16px,env(safe-area-inset-top)) - max(16px,env(safe-area-inset-bottom))));
-  border:.5px solid var(--hairline);border-radius:.75em}
-.previa.on{display:block}
+/* Resultado: a imagem fica sobre um cartão de vidro (o mesmo da barra e do botão), só um pouco
+   maior que ela. A largura do cartão vem da proporção da imagem (--ratio, definida ao carregar)
+   e da altura máxima, que desconta o resto do card (título, barra, botão e espaços, em em) e as
+   margens da tela, para tudo caber sem rolar. */
+.moldura{--pad:.5em;--hmax:max(8em,calc(100svh - 18.5em - max(16px,env(safe-area-inset-top)) - max(16px,env(safe-area-inset-bottom))));--ratio:1;
+  display:none;justify-self:center;padding:var(--pad);border-radius:1.1em;box-shadow:var(--glass-float);
+  width:min(100%,calc(var(--hmax) * var(--ratio) + 2 * var(--pad)))}
+.moldura.on{display:block}
+.previa{display:block;width:100%;height:auto;border-radius:.65em}
 
 </style>
 </head>
@@ -199,7 +199,7 @@ button{font:inherit;cursor:pointer}
   <p class="dica" id="dica" hidden></p>
   <p class="motivo" id="motivo" role="alert" hidden></p>
 
-  <img class="previa" id="imagem" alt="Resultado">
+  <div class="moldura frost" id="moldura"><img class="previa" id="imagem" alt="Resultado"></div>
 
   <div class="downloads">
     <button class="btn frost" type="button" disabled id="baixar">
@@ -229,6 +229,11 @@ let formato = "png";
 // Valores iniciais do pedido. Ficam editáveis só na issue (no corpo, uma linha por opção).
 const PADRAO = { perfil: "dia", pelos: "1.0" };
 let resultado = null;
+// a largura do cartão de vidro acompanha a proporção da imagem
+$("#imagem").addEventListener("load", (e) => {
+  const { naturalWidth: w, naturalHeight: h } = e.target;
+  if (w && h) $("#moldura").style.setProperty("--ratio", String(w / h));
+});
 
 function estado(qual, motivo = "") {
   for (const [k, el] of Object.entries(st)) el.hidden = k !== qual;
@@ -238,7 +243,7 @@ function estado(qual, motivo = "") {
   $("#motivo").hidden = true;
   $("#baixar").disabled = qual !== "pronto";
   $("#rotulo-baixar").textContent = formato.toUpperCase();
-  if (qual !== "pronto") $("#imagem").classList.remove("on");
+  if (qual !== "pronto") $("#moldura").classList.remove("on");
 }
 
 async function gh(caminho) {
@@ -320,7 +325,7 @@ async function baixarResultado() {
       formato = ext;
       resultado = { url: URL.createObjectURL(blob), nome: `realista-${versao}.${ext}` };
       $("#imagem").src = resultado.url;
-      $("#imagem").classList.add("on");
+      $("#moldura").classList.add("on");
       return;
     }
     await esperar(3000);
