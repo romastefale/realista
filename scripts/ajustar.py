@@ -3,9 +3,8 @@
 
 Uso: ajustar.py CAMINHO   (imprime o caminho final; a extensão pode mudar de png para jpg)
 
-PNG acima do limite:
-  1. recompressão sem perda (PNG otimizado, compressão máxima);
-  2. se ainda passar, JPG de qualidade 95 sem redução de cor (4:4:4).
+PNG acima do limite: vira JPG de qualidade 95 sem redução de cor (4:4:4), com o mesmo tamanho
+em pixels. (Recomprimir o PNG sem perda não adianta: o realista.py já o grava otimizado.)
 Resultado em JPG não é alterado.
 O limite padrão é 90 MiB (margem sobre os 100 MB do GitHub); LIMITE_BYTES muda isso.
 """
@@ -16,11 +15,6 @@ limite = int(os.environ.get("LIMITE_BYTES", 90 * 1024 * 1024))
 caminho = sys.argv[1]
 base, ext = os.path.splitext(caminho)
 
-
-def log(msg):
-    print(msg, file=sys.stderr)
-
-
 if ext.lower() != ".png" or os.path.getsize(caminho) <= limite:
     print(caminho)
     sys.exit(0)
@@ -28,19 +22,9 @@ if ext.lower() != ".png" or os.path.getsize(caminho) <= limite:
 from PIL import Image
 
 Image.MAX_IMAGE_PIXELS = None
-log(f"PNG com {os.path.getsize(caminho) / 1048576:.0f} MiB passa do limite; recomprimindo sem perda.")
+print(f"PNG com {os.path.getsize(caminho) / 1048576:.0f} MiB passa do limite; entregando JPG de alta qualidade (95, 4:4:4).", file=sys.stderr)
+destino = base + ".jpg"
 with Image.open(caminho) as im:
-    im.load()
-    otimizado = base + ".otimizado.png"
-    im.save(otimizado, format="PNG", optimize=True, compress_level=9)
-    if os.path.getsize(otimizado) <= limite:
-        os.replace(otimizado, caminho)
-        log(f"Recompressão sem perda bastou: {os.path.getsize(caminho) / 1048576:.0f} MiB.")
-        print(caminho)
-        sys.exit(0)
-    os.remove(otimizado)
-    log("Ainda passa do limite; entregando JPG de alta qualidade (95, 4:4:4).")
-    destino = base + ".jpg"
     im.convert("RGB").save(destino, format="JPEG", quality=95, subsampling=0, optimize=True)
 os.remove(caminho)
 print(destino)
