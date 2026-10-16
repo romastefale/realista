@@ -5,7 +5,7 @@ Página para rodar o `realista.py` (foto com aspecto de iPhone, só código) pel
 ## Como usar
 
 1. Abra **https://romastefale.github.io/realista/**
-2. Ajuste upscale, perfil, pelos e formato (JPG ou PNG).
+2. Ajuste perfil, pelos e formato (JPG ou PNG). O upscale é sempre 2×.
 3. Toque na seta. Abre no GitHub uma issue já preenchida: **anexe a foto** nela (ou, antes, cole na página o link de uma foto que já esteja online e deixe o campo preenchido) e toque em *Create*. Você precisa estar logado como dono do repositório.
 4. Volte para a página: ela acompanha o processamento (1 a 3 minutos) e mostra o resultado, com botão para baixar.
 
@@ -33,7 +33,7 @@ Também dá para rodar à mão em **Actions → Processar → Run workflow**, in
 ## Observações
 
 - Agendamentos do GitHub atrasam; a foto some do histórico entre 1h e ~1h20. Em repositório público o GitHub desativa workflows agendados após 60 dias sem atividade.
-- PNG não perde qualidade, mas fica bem maior que o JPG (uma foto de 12 MP passa de 20 MB). O JPG sai com qualidade 93.
+- PNG não perde qualidade, mas fica bem maior que o JPG (em 2×, uma foto de 12 MP pode passar de 80 MB). O JPG sai com qualidade 93.
 - Perfis disponíveis: `dia` e `noite` (e `auto`, que escolhe um dos dois). Para criar outro, adicione uma entrada em `PERFIS` no `realista.py` e o nome em três lugares: `choices` do argumento `-p` no `realista.py`, a lista em `scripts/pedido.py` e o `<select id="perfil">` do `index.html`.
-- O `realista.py` reduz o upscale para não passar de 16 MP (`--max-mp`). Uma foto de 12 MP, por exemplo, sai em 1×.
+- O upscale é sempre 2× e o limite de megapixels do script foi elevado a 100 MP (`--max-mp 100`), então uma foto de 12 MP sai com 8064×6048. Em teste, isso levou de 20 a 50 s e 3 a 4 GB de memória. O GitHub recusa arquivos acima de 100 MB: se um PNG passar disso, o workflow falha ao gravar; use JPG.
 - A API pública do GitHub aceita 60 consultas por hora sem login; a página consulta a cada 10 s e depois a cada 30 s.

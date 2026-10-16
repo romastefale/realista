@@ -196,8 +196,6 @@ button{font:inherit;cursor:pointer}
   </div>
 
   <div class="opcoes">
-    <label class="opcao frost"><small>Upscale</small>
-      <select id="escala"><option value="1">1×</option><option value="2" selected>2×</option><option value="3">3×</option><option value="4">4×</option></select></label>
     <label class="opcao frost"><small>Perfil</small>
       <select id="perfil"><option value="auto" selected>auto</option><option value="dia">dia</option><option value="noite">noite</option></select></label>
     <label class="opcao frost"><small>Formato</small>
@@ -339,13 +337,12 @@ $("#form").addEventListener("submit", (e) => {
   formato = $("#formato").value;
   const corpo = [
     link,
-    `escala=${$("#escala").value}`,
     `perfil=${$("#perfil").value}`,
     `pelos=${$("#pelos").value}`,
     `formato=${formato}`,
     "",
     link ? "" : "Anexe a foto aqui (arraste, cole ou toque no clipe) e confirme em Create.",
-  ].filter((l, i) => l !== "" || i > 4).join("\n");
+  ].filter((l, i) => l !== "" || i > 3).join("\n");
   const pedido = new URLSearchParams({ title: `processar ${versao}`, body: corpo });
   // Abre já no clique, senão o navegador bloqueia a nova aba.
   window.open(`https://github.com/${DONO}/${REPO}/issues/new?${pedido}`, "_blank", "noopener");
